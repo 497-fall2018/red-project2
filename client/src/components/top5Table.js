@@ -32,7 +32,6 @@ const Top5Table = (props) => {
                                 }
                   }
               </Table.Body>
-
           </Table>
         }
 

@@ -5,7 +5,7 @@ import Top5Table from './components/top5Table.js';
 const HomePage = (props) => {
   return (
     <Top5Table
-      
+      foodItems={props.foodItems}
     />
   );
 }

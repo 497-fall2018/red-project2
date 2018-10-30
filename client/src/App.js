@@ -17,9 +17,13 @@ const diningHallQuery = gql`
   }
 `
 
+const foods = [
+  {name: "Hamburger", rank: "1", diningHall: "Plex", price: },
+]
+
 class App extends Component {
   render() {
-    const { data: { loading, foods }} = this.props;
+    const { data: { loading /*foods*/ }} = this.props;
     if (loading) {
       return (
         <div className="App">
