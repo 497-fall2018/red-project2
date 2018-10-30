@@ -1,28 +1,39 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import gql from 'graphql-tag';
+import { graphql } from 'react-apollo';
+
+import HomePage from './components/homePage.js';
+
+const diningHallQuery = gql`
+  {
+    foods {
+      id,
+      name,
+      rating,
+      diningHall
+    }
+  }
+`
 
 class App extends Component {
   render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
+    const { data: { loading, foods }} = this.props;
+    if (loading) {
+      return (
+        <div className="App">
+          loading
+        </div>
+      );
+    } else {
+      return (
+        <HomePage
+          foodItems={foods}
+        />
+      );
+    }
   }
 }
 
-export default App;
+export default graphql(diningHallQuery)(App);

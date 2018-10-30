@@ -1,38 +1,13 @@
 import React, {Component} from 'react';
-
 import {Button, Icon, Label, Menu, Table} from 'semantic-ui-react'
+import Top5Table from './components/top5Table.js';
 
-const Top5Table = (props) => {
-    return (
-        <Table collapsing>
-            <Table.Header>
-                <Table.Row>
-                    <Table.HeaderCell>Rank</Table.HeaderCell>
-                    <Table.HeaderCell>Name</Table.HeaderCell>
-                    <Table.HeaderCell>Dining Hall</Table.HeaderCell>
-                    <Table.HeaderCell>Price</Table.HeaderCell>
-                </Table.Row>
-            </Table.Header>
+const HomePage = (props) => {
+  return (
+    <Top5Table
+      
+    />
+  );
+}
 
-            <Table.Body>
-
-                {/* This maps the foodItems recieved as a prop */}
-
-                {props
-                    .foodItems
-                    var counter = 0;
-                    .map(t => {
-                        if (counter<5){
-                        //
-                        return <FoodRow
-                                      food={t}
-                                      key={t._id}
-                                                  />
-                                counter = counter + 1;
-                                                }
-                                }
-                  }
-              </Table.Body>
-
-          </Table>
-        }
+export default HomePage;
