@@ -4,6 +4,10 @@ const { GraphQLServer } = require('graphql-yoga');
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/NUdining', { useNewUrlParser: true });
 
+const Dining = require('./models/dining')
+const Food = require('./models/food')
+const User = require('./models/user')
+
 DiningHall = mongoose.model('DiningHall', {
     name: String,
     rating: Number,
