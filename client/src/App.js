@@ -33,6 +33,14 @@ const nonDiningFoods = [
   {_id: "5", name: "Fries", rank: "5", diningHall: "Wildcat Deli", price: "3.00"}
 ]
 
+const diningHallFoods = [
+  {_id: "1", name: "Apples ", rank: "1", diningHall: "Asiana Foodville", price: "3.00"},
+  {_id: "2", name: "Oranges", rank: "2", diningHall: "Budlong Hot Chicken", price: "3.00"},
+  {_id: "3", name: "Bananas", rank: "3", diningHall: "Lisa's", price: "3.00"},
+  {_id: "4", name: "Peaches", rank: "4", diningHall: "Lisa's", price: "3.00"},
+  {_id: "5", name: "Mangoes", rank: "5", diningHall: "Wildcat Deli", price: "3.00"}
+]
+
 class App extends Component {
   render() {
     // const { data: { loading, foods }} = this.props;
@@ -40,6 +48,7 @@ class App extends Component {
       <PageContainer
         diningFoods={diningFoods}
         nonDiningFoods={nonDiningFoods}
+        diningHallFoods={diningHallFoods}
       />
     );
   }
