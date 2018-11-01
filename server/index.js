@@ -8,12 +8,6 @@ const Dining = require('./models/dining')
 const Food = require('./models/food')
 const User = require('./models/user')
 
-DiningHall = mongoose.model('DiningHall', {
-    name: String,
-    rating: Number,
-    hours: String
-});
-
 // typeDefs is the schema (what requests you can make to the server)
 // resolvers implement how our requests will be handled
 typeDefs = `
