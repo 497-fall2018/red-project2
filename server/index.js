@@ -36,7 +36,6 @@ typeDefs = `
 // mongo generates an id by default, ID is a special type in graphql
 // passing the id in an update function is how graphQL knows which item to update
 
-
 resolvers = {
     Query: {
         diningHalls: () => DiningHall.find()
@@ -57,10 +56,6 @@ resolvers = {
         }
     }
 }
-
-
-
-
 
 const server = new GraphQLServer({ typeDefs, resolvers });
 mongoose.connection.once('open', function() {
