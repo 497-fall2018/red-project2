@@ -4,7 +4,7 @@ const userSchema = mongoose.Schema({
     name: String,
     diet: String,
     preferences: [Boolean],
-    favFoodsIDs: [String]  
+    faveFoodsIds: [String]  
 });
 
 module.exports = mongoose.model('User', userSchema);

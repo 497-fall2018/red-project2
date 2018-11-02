@@ -2,9 +2,10 @@ const mongoose = require('mongoose');
 
 const foodSchema = new mongoose.Schema({
     name: String,
-    rating: Number,
+    thumbsUp: Number,
+    thumbsDown: Number,
     diet: String,
-    diningHallID: String
+    diningId: String
 });
 
 module.exports = mongoose.model('Food', foodSchema);
