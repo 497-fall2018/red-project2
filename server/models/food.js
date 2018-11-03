@@ -5,6 +5,7 @@ const foodSchema = new mongoose.Schema({
     thumbsUp: Number,
     thumbsDown: Number,
     diet: String,
+    preferences: [String],
     diningId: String
 });
 

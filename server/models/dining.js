@@ -5,6 +5,7 @@ const diningSchema = new mongoose.Schema({
     rating: Number,
     hours: String,
     isHall: Boolean,
+    menuIds: [String],
     foodIds: [String]
 });
 
