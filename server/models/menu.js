@@ -6,3 +6,5 @@ const menuSchema = new mongoose.Schema({
     diningId: String,
     foodIds: [String]
 });
+
+module.exports = mongoose.model('Menu', menuSchema);

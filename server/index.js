@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/NUdining', { useNewUrlParser: true });
 
 const Dining = require('./models/dining')
+const Menu = require('./models/menu')
 const Food = require('./models/food')
 const User = require('./models/user')
 
@@ -48,14 +49,22 @@ typeDefs = `
         findDinings: [Dining!]!
         findDiningHalls: [Dining!]!
         findNonDiningHalls: [Dining!]!
-        findDining(id: ID!): Dining!
+        findDining(id: ID!): Dining
         dining: Dining!
 
         findMenus: [Menu!]!
-        findMenu(id: ID!): Menu!
+        findMenu(id: ID!): Menu
         menus: [Menu!]!
 
+        findFoods: [Food!]!
+        findFood(id: ID!): Food
         foods: [Food!]!
+        faveFoods: [Food!]!
+        findFoodByNameAndDining(name: String!, diningId: ID!): Food
+
+        findUsers: [User!]!
+        findUser(id: ID!): User
+        findUserByName(name: String!): User
 
     }
     type Mutation {
@@ -87,22 +96,28 @@ resolvers = {
         findDiningHalls: () => Dining.find({isHall: true}),
         findNonDiningHalls: () => Dining.find({isHall: false}),
         findDining: (_, {id}) => Dining.findById(id),
-        dining: (parent, {}) => Dining.findById(parent.diningId),
+        dining: (parent) => Dining.findById(parent.diningId),
 
         //MENU
         findMenus: () => Menu.find({}),
         findMenu: (_, {id}) => Menu.findById(id),
-        menus: (parent, {}) => parent.menuIds.map(
+        menus: (parent) => parent.menuIds.map(
             (id) => Menu.findById(id)),
+            
         
-        //USER
-        foods: (parent, {}) => parent.foodIds.map(
-            (id) => Food.findById(id)),
+        //FOOD
         findFoods: () => Food.find({}),
         findFood: (_, {id}) => Food.findById(id),
-        findFoodByNameAndDining: (_, {name, dining}) => Food.find()
-        
+        foods: (parent, {}) => parent.foodIds.map(
+            (id) => Food.findById(id)),
+        faveFoods: (parent, {}) => parent.foodIds.map(
+            (id) => Food.findById(id)),
+        findFoodByNameAndDining: (_, {name, diningId}) => Food.find({name: name, diningId: diningId}),
 
+        //USER
+        findUsers: () => User.find({}),
+        findUser: (_, {id}) => User.findById(id),
+        findUserByName: (_, {name}) => User.find({name})
     },
 
     Mutation: {
@@ -134,13 +149,17 @@ resolvers = {
 
         //MENU
         createMenu: async (_, {diningId, timeOfDay, date, foodIds}) => {
-            const menu = new Menu({
+            let menu = new Menu({
                 date: date,
                 timeOfDay: timeOfDay,
                 diningId: diningId,
                 foodIds: foodIds
             });
-            await menu.save();
+            menu = await menu.save();
+            // have to fetch for id to become present?
+            await Dining.findByIdAndUpdate(diningId, {
+                $push: {menuIds: menu._id}
+            });
             return menu;
         },
         updateMenu: async (_, {id, foodIds, date}) => {
@@ -151,13 +170,14 @@ resolvers = {
             return true;
         },
         removeMenu: async (_, {id}) => {
+            // remove menu from dining
             await Menu.findByIdAndRemove(id);
             return true;
         },
 
         //FOOD
         createFood: async (_, {name, diet, diningId}) => {
-            const food = new Food({
+            let food = new Food({
                 name: name,
                 thumbsUp: 0,
                 thumbsDown: 0,
@@ -165,7 +185,11 @@ resolvers = {
                 preferences: [], // use food name and description to match with preferences
                 diningId: diningId
             });
-            await food.save();
+            food = await food.save();
+            // have to fetch for id to become present?
+            await Dining.findByIdAndUpdate(diningId, {
+                $push: {foodIds: food._id}
+            });
             return food;
         },
         updateFood: async (_, {id, thumbsUp, thumbsDown}) => {
@@ -176,6 +200,7 @@ resolvers = {
             return true;
         },
         removeFood: async (_, {id}) => {
+            // remove food from dining
             await Food.findByIdAndRemove(id);
             return true;
         },
