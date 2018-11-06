@@ -54,12 +54,9 @@ typeDefs = `
 
         findMenus: [Menu!]!
         findMenu(id: ID!): Menu
-        menus: [Menu!]!
 
         findFoods: [Food!]!
         findFood(id: ID!): Food
-        foods: [Food!]!
-        faveFoods: [Food!]!
         findFoodByNameAndDining(name: String!, diningId: ID!): Food
 
         findUsers: [User!]!
@@ -79,6 +76,8 @@ typeDefs = `
         createFood(name: String!, diet: String, diningId: ID!): Food!
         updateFood(id: ID!, thumbsUp: Int, thumbsDown: Int): Boolean!
         removeFood(id: ID!): Boolean!
+        thumbsUp(id: ID!): Boolean!
+        thumbsDown(id: ID!): Boolean!
 
         createUser(name: String!, diet: String, preferences: [String!]): User!
         updateUser(id: ID!, name: String, diet: String, preferences: [String!]): Boolean!
@@ -90,6 +89,23 @@ typeDefs = `
 // passing the id in an update function is how graphQL knows which item to update
 
 resolvers = {
+    Dining: {
+        menus: (parent, {}) => parent.menuIds.map(
+            (id) => Menu.findById(id)),
+        foods: (parent, {}) => parent.foodIds.map(
+            (id) => Food.findById(id))
+    },
+    Menu: {
+        foods: (parent, {}) => parent.foodIds.map(
+            (id) => Food.findById(id))
+    },
+    Food: {
+
+    },
+    User: {
+        faveFoods: (parent, {}) => parent.foods.map(
+            (id) => Food.findById(id)),
+    },
     Query: {
         //DINING
         findDinings: () => Dining.find({}),
@@ -101,17 +117,11 @@ resolvers = {
         //MENU
         findMenus: () => Menu.find({}),
         findMenu: (_, {id}) => Menu.findById(id),
-        menus: (parent) => parent.menuIds.map(
-            (id) => Menu.findById(id)),
             
         
         //FOOD
         findFoods: () => Food.find({}),
         findFood: (_, {id}) => Food.findById(id),
-        foods: (parent, {}) => parent.foodIds.map(
-            (id) => Food.findById(id)),
-        faveFoods: (parent, {}) => parent.foodIds.map(
-            (id) => Food.findById(id)),
         findFoodByNameAndDining: (_, {name, diningId}) => Food.find({name: name, diningId: diningId}),
 
         //USER
@@ -202,6 +212,14 @@ resolvers = {
         removeFood: async (_, {id}) => {
             // remove food from dining
             await Food.findByIdAndRemove(id);
+            return true;
+        },
+        thumbsUp: async (_, {id}) => {
+            await Food.findByIdAndUpdate(id, { $inc: {thumbsUp: 1}});
+            return true;
+        },
+        thumbsDown: async (_, {id}) => {
+            await Food.findByIdAndUpdate(id, { $inc: {thumbsDown: 1}});
             return true;
         },
 
