@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: String,
     diet: String,
-    preferences: [Boolean],
-    favFoodsIDs: [String]  
+    preferences: [String],
+    faveFoodIds: [String]  
 });
 
 module.exports = mongoose.model('User', userSchema);

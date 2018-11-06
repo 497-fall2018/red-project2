@@ -9,9 +9,12 @@ const Top5Table = (props) => {
           {props
               .foodItems
               .map(f => {
-                return <FoodRow
+                return <FoodRow 
                     food={f}
-                    key={f._id}/>
+                    key={f._id}
+                    onIncrement={e => props.onIncrement(f)}
+                    onDecrement={e => props.onDecrement(f)}
+                    />
               })
           }
         </Card.Group>
