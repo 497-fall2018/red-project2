@@ -13,6 +13,13 @@ export class HomePage extends Component {
       }
   }
 
+  onIncrement = (food) => {
+    this.props.onIncrement(food);
+  }
+
+  onDecrement = (food) => {
+    this.props.onDecrement(food);
+  }
   
   handleTop5Toggle = (e, { name }) => this.setState({ activeTop5: name })
 
@@ -30,6 +37,8 @@ export class HomePage extends Component {
             </Menu>
             <Top5Table
               foodItems={activeTop5 == 'dining'? this.props.diningFoods : this.props.nonDiningFoods}
+              onIncrement={this.onIncrement}
+              onDecrement={this.onDecrement}
             />
           </div>
         </div>
