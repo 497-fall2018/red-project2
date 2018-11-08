@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 const foodSchema = new mongoose.Schema({
     name: String,
+    description: String,
     thumbsUp: Number,
     thumbsDown: Number,
     diet: String,
+    category: String,
     preferences: [String],
     diningId: String
 });

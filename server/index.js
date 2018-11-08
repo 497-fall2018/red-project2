@@ -3,6 +3,7 @@ const { GraphQLServer } = require('graphql-yoga');
 // graphql-playground is also set up
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/NUdining', { useNewUrlParser: true });
+mongoose.set('useFindAndModify', false);
 
 const Dining = require('./models/dining')
 const Menu = require('./models/menu')
@@ -46,22 +47,23 @@ typeDefs = `
 
     }
     type Query {
-        findDinings: [Dining!]!
-        findDiningHalls: [Dining!]!
-        findNonDiningHalls: [Dining!]!
+        dinings: [Dining!]!
+        diningHalls: [Dining!]!
+        nonDiningHalls: [Dining!]!
         findDining(id: ID!): Dining
         dining: Dining!
+        diningByName(name: String!): Dining!
 
-        findMenus: [Menu!]!
-        findMenu(id: ID!): Menu
+        menus: [Menu!]!
+        menu(id: ID!): Menu
 
-        findFoods: [Food!]!
-        findFood(id: ID!): Food
-        findFoodByNameAndDining(name: String!, diningId: ID!): Food
+        foods: [Food!]!
+        food(id: ID!): Food
+        foodByNameAndDining(name: String!, diningId: ID!): Food!
 
-        findUsers: [User!]!
-        findUser(id: ID!): User
-        findUserByName(name: String!): User
+        users: [User!]!
+        user(id: ID!): User
+        userByName(name: String!): User
 
     }
     type Mutation {
@@ -69,11 +71,12 @@ typeDefs = `
         updateDining(id: ID!, rating: Int, hours: Int): Boolean!
         removeDining(id: ID!): Boolean!
 
-        createMenu(diningId: ID!, timeOfDay: String!, date: String!, foodIds: [ID!]): Menu!
+        createMenu(diningId: ID!, timeOfDay: String!, date: String!): Menu!
+        addFoodToMenu(id: ID!, foodId: ID!): Boolean!
         updateMenu(id: ID!, foodIds: [ID!], date: String): Boolean!
         removeMenu(id: ID!): Boolean!
 
-        createFood(name: String!, diet: String, diningId: ID!): Food!
+        createFood(name: String!, description: String, diet: String, category: String, diningId: ID!): Food!
         updateFood(id: ID!, thumbsUp: Int, thumbsDown: Int): Boolean!
         removeFood(id: ID!): Boolean!
         thumbsUp(id: ID!): Boolean!
@@ -90,44 +93,46 @@ typeDefs = `
 
 resolvers = {
     Dining: {
-        menus: (parent, {}) => parent.menuIds.map(
+        menus: (parent) => parent.menuIds.map(
             (id) => Menu.findById(id)),
-        foods: (parent, {}) => parent.foodIds.map(
+        foods: (parent) => parent.foodIds.map(
             (id) => Food.findById(id))
     },
     Menu: {
-        foods: (parent, {}) => parent.foodIds.map(
+        dining: (parent) => Dining.findById(parent.diningId),
+        foods: (parent) => parent.foodIds.map(
             (id) => Food.findById(id))
     },
     Food: {
-
+        dining: (parent) => Dining.findById(parent.diningId)
     },
     User: {
-        faveFoods: (parent, {}) => parent.foods.map(
+        faveFoods: (parent) => parent.faveFoodIds.map(
             (id) => Food.findById(id)),
     },
     Query: {
         //DINING
-        findDinings: () => Dining.find({}),
-        findDiningHalls: () => Dining.find({isHall: true}),
-        findNonDiningHalls: () => Dining.find({isHall: false}),
+        dinings: () => Dining.find({}),
+        diningHalls: () => Dining.find({isHall: true}),
+        nonDiningHalls: () => Dining.find({isHall: false}),
         findDining: (_, {id}) => Dining.findById(id),
         dining: (parent) => Dining.findById(parent.diningId),
+        diningByName: (_, {name}) => Dining.findOne({name: name}),
 
         //MENU
-        findMenus: () => Menu.find({}),
-        findMenu: (_, {id}) => Menu.findById(id),
+        menus: () => Menu.find({}),
+        menu: (_, {id}) => Menu.findById(id),
             
         
         //FOOD
-        findFoods: () => Food.find({}),
-        findFood: (_, {id}) => Food.findById(id),
-        findFoodByNameAndDining: (_, {name, diningId}) => Food.find({name: name, diningId: diningId}),
+        foods: () => Food.find({}),
+        food: (_, {id}) => Food.findById(id),
+        foodByNameAndDining: (_, {name, diningId}) => Food.find({name: name, diningId: diningId}),
 
         //USER
-        findUsers: () => User.find({}),
-        findUser: (_, {id}) => User.findById(id),
-        findUserByName: (_, {name}) => User.find({name})
+        users: () => User.find({}),
+        user: (_, {id}) => User.findById(id),
+        userByName: (_, {name}) => User.find({name})
     },
 
     Mutation: {
@@ -158,15 +163,13 @@ resolvers = {
         },
 
         //MENU
-        createMenu: async (_, {diningId, timeOfDay, date, foodIds}) => {
+        createMenu: async (_, {diningId, timeOfDay, date}) => {
             let menu = new Menu({
                 date: date,
                 timeOfDay: timeOfDay,
-                diningId: diningId,
-                foodIds: foodIds
+                diningId: diningId
             });
-            menu = await menu.save();
-            // have to fetch for id to become present?
+            await menu.save();
             await Dining.findByIdAndUpdate(diningId, {
                 $push: {menuIds: menu._id}
             });
@@ -179,24 +182,34 @@ resolvers = {
             });
             return true;
         },
+        addFoodToMenu: async (_, {id, foodId}) => {
+            await Menu.findByIdAndUpdate(id, {
+                $push: {foodIds: foodId}
+            });
+            return True
+        },
         removeMenu: async (_, {id}) => {
-            // remove menu from dining
+            let menu = Menu.findById(id);
+            await Dining.findByIdAndUpdate(menu.diningId, {
+                $pull: {menuIds: id}
+            });
             await Menu.findByIdAndRemove(id);
             return true;
         },
 
         //FOOD
-        createFood: async (_, {name, diet, diningId}) => {
+        createFood: async (_, {name, description, diet, category, diningId}) => {
             let food = new Food({
                 name: name,
+                description: description,
                 thumbsUp: 0,
                 thumbsDown: 0,
                 diet: diet,
+                category: category,
                 preferences: [], // use food name and description to match with preferences
                 diningId: diningId
             });
-            food = await food.save();
-            // have to fetch for id to become present?
+            await food.save();
             await Dining.findByIdAndUpdate(diningId, {
                 $push: {foodIds: food._id}
             });
@@ -210,7 +223,11 @@ resolvers = {
             return true;
         },
         removeFood: async (_, {id}) => {
-            // remove food from dining
+            let food = Food.findById(id);
+            await Dining.findByIdAndUpdate(food.diningId, {
+                $pull: {foodIds: id}
+            });
+            await User.update({})
             await Food.findByIdAndRemove(id);
             return true;
         },
@@ -259,3 +276,40 @@ const server = new GraphQLServer({ typeDefs, resolvers });
 mongoose.connection.once('open', function() {
     server.start(() => console.log('Server is running on localhost:4000'));
 });
+
+/*
+// for a day
+    // for a dining hall
+        // for every menu ***
+            // we have all the foods for that menu
+            // for each food
+                // look in the database to see if a food with that name is already there
+                // if it is, put the foodId into foodIds for this new menu
+
+
+//for every menu
+`mutation {
+    createMenu(date: "November 8", timeOfDay: "Lunch", diningName: "Sargent")
+}
+`
+
+//for each food in the menu
+`query {
+    foodByNameAndDining(name: "chipotle chicken", diningId:) // returns the food
+}
+`
+// if true, add foodId to foodIds array for the menu
+// if false
+`mutation {
+    createFood(name: "chipotle chicken", decription: "blah", diet: "blah")
+}`
+// foodId to foodIds array for the menu
+
+
+
+
+// top 5 for the day overall - dining only
+// top 5 for particular meal - dining only
+// top 5 for a dining hall
+// make 5 a parameter
+*/
