@@ -67,7 +67,13 @@ export class PageContainer extends Component {
       }
   }
 
-  
+  onIncrement = (food) => {
+    this.props.onIncrement(food);
+  }
+
+  onDecrement = (food) => {
+    this.props.onDecrement(food);
+  }
 
   changeDiningPage = (value) => { console.log(value);
     this.setState({ activePage: value}) }
@@ -100,6 +106,8 @@ export class PageContainer extends Component {
         <HomePage
           diningFoods={this.props.diningFoods}
           nonDiningFoods={this.props.nonDiningFoods}
+          onIncrement={this.onIncrement}
+          onDecrement={this.onDecrement}
         />
         </div>
       );
