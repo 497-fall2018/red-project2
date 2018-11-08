@@ -5,39 +5,81 @@ import gql from 'graphql-tag';
 import { graphql } from 'react-apollo';
 import PageContainer from './components/pageContainer.js';
 import {sort} from './components/utils/sort'
+import moment from 'moment'
 
 var request = require('request');
 
-const diningHallQuery = gql`
-  {
-    foods {
-      id,
-      name,
-      rating,
-      diningHall
+// chain of commands
+// dining_id = GetDiningHallId
+// menu_id = CreateMenu(dining_id ......)
+// food_id = SearchFood(dining_id) or null
+// if (food_id == null) { food_id = CreateFood(....., dining_id) }
+// AddFoodToMenu(menu_id, food_id)
+
+const GetDiningHallId = gql`
+  query($name: String!) {
+    diningByName(name: $name) {
+      id
     }
   }
 `
 
+const CreateMenu = gql`
+  mutation($diningId: ID!, $timeOfDay: String!, $date: String!) {
+    createMenu(diningId: $diningId, timeOfDay: $timeOfDay, date: $date) {
+      id
+    }
+  }
+`
+
+// check if food or null
+const SearchFood = gql`
+  query($name: String!, $diningId: ID!) {
+    findFoodByNameAndDining(name: $name, diningId: $diningId) {
+      id
+    }
+  }
+`
+
+// if null
+const CreateFood = gql`
+  mutation($name: String!, $description: String, $diet: String, $category: String, $diningId: ID!) {
+    createFood(name: $name, description: $description, diet: $diet, category: $category, diningId: $diningId) {
+      id
+    }
+  }
+`
+
+// get the id from above
+const AddFoodToMenu = gql`
+  mutation($menuId: ID!, $foodId: ID!) {
+    addFoodToMenu(menuId: $menuId, foodId: $foodId)
+  }
+`
+
+// QUERY 
+
+
+
 const diningHallUrls = [
   // TODO: substitute names later
-  {name: "Allison", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date=2018-11-6'},
-  {name: "Hinman", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date=2018-11-6'},
-  {name: "Sargent", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593e&date=2018-11-6'},
-  {name: "Plex West", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7de3f3eeb60c7d3854ba&date=2018-11-6'},
-  {name: "Plex East", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7ee9f3eeb60cb4f8f3af&date=2018-11-6'}
+  {name: "Allison", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date='},
+  {name: "Hinman", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date='},
+  {name: "Sargent", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593e&date='},
+  {name: "Plex West", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7de3f3eeb60c7d3854ba&date='},
+  {name: "Plex East", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7ee9f3eeb60cb4f8f3af&date='}
 ];
 
 function responseCallback(error, response, body) {
     if (!error && response.statusCode == 200) {
         var all_foods = [];
         var json_response = JSON.parse(body);
-        // console.log(json_response.menu);
+        console.log(json_response);
         for (var i = 0; i < json_response.menu.periods.length; i++) {
           var period = json_response.menu.periods[i];
           var FOOD_PERIOD = period.name;
           for (var j = 0; j < period.categories.length; j++) {
-            var preferences = period.categories[j].name;
+            var category = period.categories[j].name;
             for (var k = 0; k < period.categories[j].items.length; k++) {
               var food = period.categories[j].items[k];
               var filters = food.filters;
@@ -49,15 +91,14 @@ function responseCallback(error, response, body) {
               }
               var db_food = {
                 name: food.name,
+                description: food.desc,
                 thumbsUp: 0,
                 thumbsDown: 0,
                 diet: diets.join(", "),
-                preferences: preferences
+                category: category
+                // preferences
                 //diningHallId: do later
               };
-              //food.name
-              //food.desc
-              //food.ingredients
             }
           }
         }
@@ -87,8 +128,9 @@ function scrapeMenu() {
   //   request(options, responseCallback);
   // }
 
+  var todaydate = moment().format("YYYY-MM-D");
   var options = {
-    url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date=2018-11-6',
+    url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date=' + todaydate,
     headers: headers
   };
 
