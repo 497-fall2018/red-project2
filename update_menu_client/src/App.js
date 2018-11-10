@@ -81,11 +81,12 @@ class App extends Component {
 
     var todaydate = moment().format("YYYY-MM-D");
     var options = {
-      url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date=' + todaydate,
+      url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date=' + todaydate,
       headers: headers
     };
 
-    var diningHallName = "Hinman";
+    console.log(options.url);
+    var diningHallName = "Allison";
     request(options, (function(error, response, body) {
       this.responseCallback(diningHallName, error, response, body, todaydate);
     }).bind(this));
@@ -96,28 +97,30 @@ class App extends Component {
       // TODO: this does not yet return dining_id
       // var dining_id = this.getDiningHallId(diningHallName);
       var json_response = JSON.parse(body);
-      for (var i = 0; i < json_response.menu.periods.length; i++) {
-        var period = json_response.menu.periods[i];
-        var FOOD_PERIOD = period.name;
-        // var menu_id = this.createMenu(dining_id, FOOD_PERIOD, todaydate);
-        for (var j = 0; j < period.categories.length; j++) {
-          var category = period.categories[j].name;
-          for (var k = 0; k < period.categories[j].items.length; k++) {
-            var food = period.categories[j].items[k];
-            var filters = food.filters;
-            var diets = [];
-            for (var l = 0; l < filters.length; l++) {
-              if (filters[l].type == "label") {
-                diets.push(filters[l].name);
+      if (json_response.status != "error") {
+        for (var i = 0; i < json_response.menu.periods.length; i++) {
+          var period = json_response.menu.periods[i];
+          var FOOD_PERIOD = period.name;
+          // var menu_id = this.createMenu(dining_id, FOOD_PERIOD, todaydate);
+          for (var j = 0; j < period.categories.length; j++) {
+            var category = period.categories[j].name;
+            for (var k = 0; k < period.categories[j].items.length; k++) {
+              var food = period.categories[j].items[k];
+              var filters = food.filters;
+              var diets = [];
+              for (var l = 0; l < filters.length; l++) {
+                if (filters[l].type == "label") {
+                  diets.push(filters[l].name);
+                }
               }
+
+              // var food_id = this.searchFood(food.name, dining_id);
+              // if (food_id == null) {
+              //   food_id = this.createFood(food.name, food.description, diet.join(", "), category, dining_id);
+              // }
+              // this.addFoodToMenu(menu_id, food_id);
+
             }
-
-            // var food_id = this.searchFood(food.name, dining_id);
-            // if (food_id == null) {
-            //   food_id = this.createFood(food.name, food.description, diet.join(", "), category, dining_id);
-            // }
-            // this.addFoodToMenu(menu_id, food_id);
-
           }
         }
       }
