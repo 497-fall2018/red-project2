@@ -30,7 +30,7 @@ typeDefs = `
         foods: [Food!]!
     }
     type Food {
-        id: ID!
+        id: ID
         name: String!
         thumbsUp: Int!
         thumbsDown: Int!
@@ -52,14 +52,14 @@ typeDefs = `
         nonDiningHalls: [Dining!]!
         findDining(id: ID!): Dining
         dining: Dining!
-        diningByName(name: String!): Dining!
+        diningByName(name: String!): Dining
 
         menus: [Menu!]!
         menu(id: ID!): Menu
 
         foods: [Food!]!
         food(id: ID!): Food
-        foodByNameAndDining(name: String!, diningId: ID!): Food!
+        foodByNameAndDining(name: String!, diningId: ID!): Food
 
         users: [User!]!
         user(id: ID!): User
@@ -76,7 +76,7 @@ typeDefs = `
         updateMenu(id: ID!, foodIds: [ID!], date: String): Boolean!
         removeMenu(id: ID!): Boolean!
 
-        createFood(name: String!, description: String, diet: String, category: String, diningId: ID!): Food!
+        createFood(name: String!, description: String, diet: String, category: String, diningId: ID!): Food
         updateFood(id: ID!, thumbsUp: Int, thumbsDown: Int): Boolean!
         removeFood(id: ID!): Boolean!
         thumbsUp(id: ID!): Boolean!
@@ -122,12 +122,12 @@ resolvers = {
         //MENU
         menus: () => Menu.find({}),
         menu: (_, {id}) => Menu.findById(id),
-            
-        
+
+
         //FOOD
         foods: () => Food.find({}),
         food: (_, {id}) => Food.findById(id),
-        foodByNameAndDining: (_, {name, diningId}) => Food.find({name: name, diningId: diningId}),
+        foodByNameAndDining: (_, {name, diningId}) => Food.findOne({name: name, diningId: diningId}),
 
         //USER
         users: () => User.find({}),
@@ -186,7 +186,7 @@ resolvers = {
             await Menu.findByIdAndUpdate(id, {
                 $push: {foodIds: foodId}
             });
-            return True
+            return true;
         },
         removeMenu: async (_, {id}) => {
             let menu = Menu.findById(id);
@@ -199,21 +199,27 @@ resolvers = {
 
         //FOOD
         createFood: async (_, {name, description, diet, category, diningId}) => {
-            let food = new Food({
-                name: name,
-                description: description,
-                thumbsUp: 0,
-                thumbsDown: 0,
-                diet: diet,
-                category: category,
-                preferences: [], // use food name and description to match with preferences
-                diningId: diningId
-            });
-            await food.save();
-            await Dining.findByIdAndUpdate(diningId, {
-                $push: {foodIds: food._id}
-            });
+          let foundFood = Food.find({name: name, diningId: diningId}, async function(err, docs) {
+            if (docs.length) {
+              let food = docs;
+            } else {
+              let food = new Food({
+                  name: name,
+                  description: description,
+                  thumbsUp: 0,
+                  thumbsDown: 0,
+                  diet: diet,
+                  category: category,
+                  preferences: [], // use food name and description to match with preferences
+                  diningId: diningId
+              });
+              await food.save();
+              await Dining.findByIdAndUpdate(diningId, {
+                  $push: {foodIds: food._id}
+              });
+            }
             return food;
+          });
         },
         updateFood: async (_, {id, thumbsUp, thumbsDown}) => {
             await Food.findByIdAndUpdate(id, {
