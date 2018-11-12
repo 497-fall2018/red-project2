@@ -24,8 +24,8 @@ const CreateMenu = gql`
 
 // check if food or null
 const SearchFood = gql`
-  query findFoodByNameAndDining($name: String!, $diningId: ID!) {
-    findFoodByNameAndDining(name: $name, diningId: $diningId) {
+  query foodByNameAndDining($name: String!, $diningId: ID!) {
+    foodByNameAndDining(name: $name, diningId: $diningId) {
       id
     }
   }
@@ -43,7 +43,7 @@ const CreateFood = gql`
 // get the id from above
 const AddFoodToMenu = gql`
   mutation addFoodToMenu($menuId: ID!, $foodId: ID!) {
-    addFoodToMenu(menuId: $menuId, foodId: $foodId)
+    addFoodToMenu(id: $menuId, foodId: $foodId)
   }
 `
 
@@ -95,34 +95,53 @@ class App extends Component {
   responseCallback = (diningHallName, error, response, body, date) => {
     if (!error && response.statusCode == 200) {
       // TODO: this does not yet return dining_id
-      // var dining_id = this.getDiningHallId(diningHallName);
       var json_response = JSON.parse(body);
       if (json_response.status != "error") {
-        for (var i = 0; i < json_response.menu.periods.length; i++) {
-          var period = json_response.menu.periods[i];
-          var FOOD_PERIOD = period.name;
-          // var menu_id = this.createMenu(dining_id, FOOD_PERIOD, todaydate);
-          for (var j = 0; j < period.categories.length; j++) {
-            var category = period.categories[j].name;
-            for (var k = 0; k < period.categories[j].items.length; k++) {
-              var food = period.categories[j].items[k];
-              var filters = food.filters;
-              var diets = [];
-              for (var l = 0; l < filters.length; l++) {
-                if (filters[l].type == "label") {
-                  diets.push(filters[l].name);
+        var diningIdPromise = this.getDiningHallId(diningHallName);
+        diningIdPromise.then(({data}) => {
+          var dining_id = data.diningByName.id;
+          for (var i = 0; i < json_response.menu.periods.length; i++) {
+            var period = json_response.menu.periods[i];
+            var FOOD_PERIOD = period.name;
+            var menuIdPromise = this.createMenu(dining_id, FOOD_PERIOD, date);
+            menuIdPromise.then(({data}) => {
+              var menu_id = data.createMenu.id;
+              for (var j = 0; j < period.categories.length; j++) {
+                var category = period.categories[j].name;
+                for (var k = 0; k < period.categories[j].items.length; k++) {
+                  var food = period.categories[j].items[k];
+                  var filters = food.filters;
+                  var diets = [];
+                  for (var l = 0; l < filters.length; l++) {
+                    if (filters[l].type == "label") {
+                      diets.push(filters[l].name);
+                    }
+                  }
+
+                  var createFoodPromise = this.createFood(food.name, food.description, diets.join(", "), category, dining_id);
+                  createFoodPromise.then(({data}) => {
+                    var food_id = data.createFood.id;
+                    this.addFoodToMenu(menu_id, food_id);
+                  });
+
+                  // var foodIdPromise = this.searchFood(food.name, dining_id);
+                  // foodIdPromise.then(({data}) => {
+                  //   if (data.foodByNameAndDining == null) {
+                  //     var createFoodPromise = this.createFood(food.name, food.description, diets.join(", "), category, dining_id);
+                  //     createFoodPromise.then(({data})=> {
+                  //       food_id = data.createFood.id;
+                  //       this.addFoodToMenu(menu_id, food_id);
+                  //     });
+                  //   } else {
+                  //     var food_id = data.foodByNameAndDining.id;
+                  //     this.addFoodToMenu(menu_id, food_id);
+                  //   }
+                  // });
                 }
               }
-
-              // var food_id = this.searchFood(food.name, dining_id);
-              // if (food_id == null) {
-              //   food_id = this.createFood(food.name, food.description, diet.join(", "), category, dining_id);
-              // }
-              // this.addFoodToMenu(menu_id, food_id);
-
-            }
+            });
           }
-        }
+        });
       }
     }
   }
@@ -141,49 +160,60 @@ class App extends Component {
     addFoodToMenu(new_menu, notFoundFood)
   }
 
-  getDiningHallId = (diningHallName) => {
-    this.props.client.query({
+  testFunction = () => {
+    var diningIdPromise = this.getDiningHallId("Allison");
+    diningIdPromise.then(({data}) => {
+      var diningId = data.diningByName.id;
+      var menuIdPromise = this.createMenu(diningId, "Breakfast", "2018-10-11");
+      menuIdPromise.then(({data}) => {
+        var menu_id = data.createMenu.id;
+        var foodIdPromise = this.searchFood("Banana", diningId);
+        foodIdPromise.then(({data}) => {
+          if (data.foodByNameAndDining == null) {
+            var createFoodPromise = this.createFood("Banana", "fjeisojfoieas", "fjeisoajofiaejs", "efjsaiojaes", diningId);
+            createFoodPromise.then(({data})=> {
+              var addFoodToMenuPromise = this.addFoodToMenu(menu_id, data.createFood.id);
+              addFoodToMenuPromise.then(({data}) => {
+                console.log(data);
+              });
+            });
+          }
+        });
+      })
+    });
+  }
+
+  getDiningHallId = diningHallName => {
+    return this.props.client.query({
       query: GetDiningHallId,
       variables: {
         name: diningHallName
       }
-    }).then(({ data }) => {
-      console.log(data);
-    }).catch((error) => {
-      console.log(error);
     });
   }
 
   createMenu = (diningId, timeOfDay, date) => {
-    this.props.createMenu({
+    return this.props.createMenu({
       variables: {
         diningId: diningId,
         timeOfDay: timeOfDay,
         date: date
       },
-    }).then(({ data }) => {
-      console.log(data);
-    }).catch((error) => {
-      console.log(error);
     });
   }
 
   searchFood = (name, diningId) => {
-    this.props.client.query({
+    return this.props.client.query({
       query: SearchFood,
       variables: {
         name: name,
         diningId: diningId
       }
-    }).then(({ data }) => {
-      console.log(data);
-    }).catch((error) => {
-      console.log(error);
     });
   }
 
   createFood = (name, description, diet, category, diningId) => {
-    this.props.createFood({
+    return this.props.createFood({
       variables: {
         name: name,
         description: description,
@@ -191,32 +221,24 @@ class App extends Component {
         category: category,
         diningId: diningId
       },
-    }).then(({ data }) => {
-      console.log(data);
-    }).catch((error) => {
-      console.log(error);
     });
   }
 
   addFoodToMenu = (menuId, foodId) => {
-    this.props.addFoodToMenu({
+    return this.props.addFoodToMenu({
       variables: {
         menuId: menuId,
         foodId: foodId
       },
-    }).then(({ data }) => {
-      console.log(data);
-    }).catch((error) => {
-      console.log(error);
     });
   }
 
   render() {
+    {/*this.testFunction()*/}
     {this.scrapeMenu()}
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
           <p>
             Updating Menus ...
           </p>
