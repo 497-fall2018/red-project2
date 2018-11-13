@@ -43,7 +43,7 @@ const CreateFood = gql`
 // get the id from above
 const AddFoodToMenu = gql`
   mutation addFoodToMenu($menuId: ID!, $foodId: ID!) {
-    addFoodToMenu(id: $menuId, foodId: $foodId)
+    addFoodToMenu(menuId: $menuId, foodId: $foodId)
   }
 `
 
@@ -96,6 +96,7 @@ class App extends Component {
     if (!error && response.statusCode == 200) {
       // TODO: this does not yet return dining_id
       var json_response = JSON.parse(body);
+      console.log(json_response);
       if (json_response.status != "error") {
         var diningIdPromise = this.getDiningHallId(diningHallName);
         diningIdPromise.then(({data}) => {
@@ -123,20 +124,6 @@ class App extends Component {
                     var food_id = data.createFood.id;
                     this.addFoodToMenu(menu_id, food_id);
                   });
-
-                  // var foodIdPromise = this.searchFood(food.name, dining_id);
-                  // foodIdPromise.then(({data}) => {
-                  //   if (data.foodByNameAndDining == null) {
-                  //     var createFoodPromise = this.createFood(food.name, food.description, diets.join(", "), category, dining_id);
-                  //     createFoodPromise.then(({data})=> {
-                  //       food_id = data.createFood.id;
-                  //       this.addFoodToMenu(menu_id, food_id);
-                  //     });
-                  //   } else {
-                  //     var food_id = data.foodByNameAndDining.id;
-                  //     this.addFoodToMenu(menu_id, food_id);
-                  //   }
-                  // });
                 }
               }
             });
@@ -145,20 +132,20 @@ class App extends Component {
       }
     }
   }
-  test_function = () => {
-    var dining_id = getDiningHallId("Sargent");
-    var new_menu = createMenu(diningId, "Lunch", "November 10");
-    var foundFood = searchFood("Arroz con Pollo", diningId);
-    if (foundFood == null) {
-        foundFood = createFood("Arroz con Pollo", diningId));
-    }
-    addFoodToMenu(new_menu, foundFood)
-    var notFoundFood = searchFood("Pineapple", diningId);
-    if (notFoundFood == null) {
-      notFoundFood = createFood("Pineapple", diningId);
-    }
-    addFoodToMenu(new_menu, notFoundFood)
-  }
+  // test_function = () => {
+  //   var dining_id = getDiningHallId("Sargent");
+  //   var new_menu = createMenu(diningId, "Lunch", "November 10");
+  //   var foundFood = searchFood("Arroz con Pollo", diningId);
+  //   if (foundFood == null) {
+  //       foundFood = createFood("Arroz con Pollo", diningId));
+  //   }
+  //   addFoodToMenu(new_menu, foundFood)
+  //   var notFoundFood = searchFood("Pineapple", diningId);
+  //   if (notFoundFood == null) {
+  //     notFoundFood = createFood("Pineapple", diningId);
+  //   }
+  //   addFoodToMenu(new_menu, notFoundFood)
+  // }
 
   testFunction = () => {
     var diningIdPromise = this.getDiningHallId("Allison");
