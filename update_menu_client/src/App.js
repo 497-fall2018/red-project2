@@ -92,82 +92,64 @@ class App extends Component {
     }).bind(this));
   }
 
-  responseCallback = (diningHallName, error, response, body, date) => {
+  responseCallback = async (diningHallName, error, response, body, date) => {
     if (!error && response.statusCode == 200) {
-      // TODO: this does not yet return dining_id
       var json_response = JSON.parse(body);
       console.log(json_response);
       if (json_response.status != "error") {
-        var diningIdPromise = this.getDiningHallId(diningHallName);
-        diningIdPromise.then(({data}) => {
-          var dining_id = data.diningByName.id;
-          for (var i = 0; i < json_response.menu.periods.length; i++) {
-            var period = json_response.menu.periods[i];
-            var FOOD_PERIOD = period.name;
-            var menuIdPromise = this.createMenu(dining_id, FOOD_PERIOD, date);
-            menuIdPromise.then(({data}) => {
-              var menu_id = data.createMenu.id;
-              for (var j = 0; j < period.categories.length; j++) {
-                var category = period.categories[j].name;
-                for (var k = 0; k < period.categories[j].items.length; k++) {
-                  var food = period.categories[j].items[k];
-                  var filters = food.filters;
-                  var diets = [];
-                  for (var l = 0; l < filters.length; l++) {
-                    if (filters[l].type == "label") {
-                      diets.push(filters[l].name);
-                    }
-                  }
-
-                  var createFoodPromise = this.createFood(food.name, food.description, diets.join(", "), category, dining_id);
-                  createFoodPromise.then(({data}) => {
-                    var food_id = data.createFood.id;
-                    this.addFoodToMenu(menu_id, food_id);
-                  });
+        var dining_id = (await Promise.resolve(this.getDiningHallId(diningHallName))).data.diningByName.id;
+        for (var i = 0; i < json_response.menu.periods.length; i++) {
+          var period = json_response.menu.periods[i];
+          var FOOD_PERIOD = period.name;
+          var menu_id = (await Promise.resolve(this.createMenu(dining_id, FOOD_PERIOD, date))).data.createMenu.id;
+          for (var j = 0; j < period.categories.length; j++) {
+            var category = period.categories[j].name;
+            for (var k = 0; k < period.categories[j].items.length; k++) {
+              var food = period.categories[j].items[k];
+              var filters = food.filters;
+              var diets = [];
+              for (var l = 0; l < filters.length; l++) {
+                if (filters[l].type == "label") {
+                  diets.push(filters[l].name);
                 }
               }
-            });
+              var food_id = (await Promise.resolve(this.createFood(food.name, food.description, diets.join(", "), category, dining_id))).data.createFood.id;
+              this.addFoodToMenu(menu_id, food_id);
+            }
           }
-        });
+        }
       }
     }
   }
-  // test_function = () => {
-  //   var dining_id = getDiningHallId("Sargent");
-  //   var new_menu = createMenu(diningId, "Lunch", "November 10");
-  //   var foundFood = searchFood("Arroz con Pollo", diningId);
-  //   if (foundFood == null) {
-  //       foundFood = createFood("Arroz con Pollo", diningId));
-  //   }
-  //   addFoodToMenu(new_menu, foundFood)
-  //   var notFoundFood = searchFood("Pineapple", diningId);
-  //   if (notFoundFood == null) {
-  //     notFoundFood = createFood("Pineapple", diningId);
-  //   }
-  //   addFoodToMenu(new_menu, notFoundFood)
-  // }
 
   testFunction = () => {
-    var diningIdPromise = this.getDiningHallId("Allison");
-    diningIdPromise.then(({data}) => {
-      var diningId = data.diningByName.id;
-      var menuIdPromise = this.createMenu(diningId, "Breakfast", "2018-10-11");
-      menuIdPromise.then(({data}) => {
-        var menu_id = data.createMenu.id;
-        var foodIdPromise = this.searchFood("Banana", diningId);
-        foodIdPromise.then(({data}) => {
-          if (data.foodByNameAndDining == null) {
-            var createFoodPromise = this.createFood("Banana", "fjeisojfoieas", "fjeisoajofiaejs", "efjsaiojaes", diningId);
-            createFoodPromise.then(({data})=> {
-              var addFoodToMenuPromise = this.addFoodToMenu(menu_id, data.createFood.id);
-              addFoodToMenuPromise.then(({data}) => {
-                console.log(data);
-              });
-            });
-          }
-        });
-      })
-    });
+    for (var i = 0; i < 2; i++) {
+      var count = i;
+      var diningIdPromise = this.getDiningHallId("Allison");
+      diningIdPromise.then(function(data) {
+        console.log(count);
+        console.log(data);
+      });
+    }
+    // diningIdPromise.then(function({data}) => {
+      // var diningId = data.diningByName.id;
+      // var menuIdPromise = this.createMenu(diningId, "Breakfast", "2018-10-11");
+      // menuIdPromise.then(({data}) => {
+      //   var menu_id = data.createMenu.id;
+      //   var foodIdPromise = this.searchFood("Banana", diningId);
+      //   foodIdPromise.then(({data}) => {
+      //     if (data.foodByNameAndDining == null) {
+      //       var createFoodPromise = this.createFood("Banana", "fjeisojfoieas", "fjeisoajofiaejs", "efjsaiojaes", diningId);
+      //       createFoodPromise.then(({data})=> {
+      //         var addFoodToMenuPromise = this.addFoodToMenu(menu_id, data.createFood.id);
+      //         addFoodToMenuPromise.then(({data}) => {
+      //           console.log(data);
+      //         });
+      //       });
+      //     }
+      //   });
+      // })
+    // });
   }
 
   getDiningHallId = diningHallName => {
@@ -222,7 +204,7 @@ class App extends Component {
 
   render() {
     {/*this.testFunction()*/}
-    {this.scrapeMenu()}
+    {/*this.scrapeMenu()*/}
     return (
       <div className="App">
         <header className="App-header">
