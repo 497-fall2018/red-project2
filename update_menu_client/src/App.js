@@ -6,6 +6,14 @@ import { graphql, compose } from 'react-apollo';
 import moment from 'moment'
 
 var request = require('request');
+const CreateDining = gql`
+  mutation createDining($name: String!, $hours: String!, $isHall: Boolean!) {
+    createDining(name: $name, hours: $hours, isHall: $isHall) {
+      name
+    }
+  }
+`
+
 const GetDiningHallId = gql`
   query diningByName($name: String!) {
     diningByName(name: $name) {
@@ -47,13 +55,13 @@ const AddFoodToMenu = gql`
   }
 `
 
-const diningHallUrls = [
+const diningHalls = [
   // TODO: substitute names later
-  {name: "Allison", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date='},
-  {name: "Hinman", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date='},
-  {name: "Sargent", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593e&date='},
-  {name: "Plex West", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7de3f3eeb60c7d3854ba&date='},
-  {name: "Plex East", url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7ee9f3eeb60cb4f8f3af&date='}
+  {name: "Allison", hours: "7:00am - 8:00pm", isHall: true, url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date='},
+  {name: "Hinman", hours: "7:00am - 8:00pm", isHall: true, url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b8fdc2c1178e90ec1a3c097&date='},
+  {name: "Sargent", hours: "7:00am - 11:30pm", isHall: true, url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593e&date='},
+  {name: "Plex West", hours: "7:00am - 12:00am", isHall: true, url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7de3f3eeb60c7d3854ba&date='},
+  {name: "Plex East", hours: "7:00am - 8:00pm", isHall: true, url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5bae7ee9f3eeb60cb4f8f3af&date='}
 ];
 
 class App extends Component {
@@ -68,34 +76,35 @@ class App extends Component {
       'Connection': 'keep-alive'
     };
 
-    // for (var i = 0; i < diningHallUrls.length; i++) {
-    //   var name = diningHallUrls[i].name;
-    //   var url = diningHallUrls[i].url;
-    //   var options = {
-    //     url: url,
-    //     headers: headers
-    //   }
-    //
-    //   request(options, responseCallback);
-    // }
-
     var todaydate = moment().format("YYYY-MM-D");
-    var options = {
-      url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date=' + todaydate,
-      headers: headers
-    };
+    for (var i = 0; i < diningHalls.length; i++) {
+      var name = diningHalls[i].name;
+      var url = diningHalls[i].url;
+      var options = {
+        url: diningHalls[i].url + todaydate,
+        headers: headers
+      };
 
-    console.log(options.url);
-    var diningHallName = "Allison";
-    request(options, (function(error, response, body) {
-      this.responseCallback(diningHallName, error, response, body, todaydate);
-    }).bind(this));
+      request(options, (function(error, response, body) {
+        this.responseCallback(name, error, response, body, todaydate);
+      }).bind(this));
+    }
+
+    // var todaydate = moment().format("YYYY-MM-D");
+    // var options = {
+    //   url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date=' + todaydate,
+    //   headers: headers
+    // };
+    //
+    // var diningHallName = "Allison";
+    // request(options, (function(error, response, body) {
+    //   this.responseCallback(diningHallName, error, response, body, todaydate);
+    // }).bind(this));
   }
 
   responseCallback = async (diningHallName, error, response, body, date) => {
     if (!error && response.statusCode == 200) {
       var json_response = JSON.parse(body);
-      console.log(json_response);
       if (json_response.status != "error") {
         var dining_id = (await Promise.resolve(this.getDiningHallId(diningHallName))).data.diningByName.id;
         for (var i = 0; i < json_response.menu.periods.length; i++) {
@@ -122,34 +131,20 @@ class App extends Component {
     }
   }
 
-  testFunction = () => {
-    for (var i = 0; i < 2; i++) {
-      var count = i;
-      var diningIdPromise = this.getDiningHallId("Allison");
-      diningIdPromise.then(function(data) {
-        console.log(count);
-        console.log(data);
-      });
+  createAllDiningHalls = () => {
+    for (var i = 0; i < diningHalls.length; i++) {
+      this.createDining(diningHalls[i].name, diningHalls[i].hours, diningHalls[i].isHall);
     }
-    // diningIdPromise.then(function({data}) => {
-      // var diningId = data.diningByName.id;
-      // var menuIdPromise = this.createMenu(diningId, "Breakfast", "2018-10-11");
-      // menuIdPromise.then(({data}) => {
-      //   var menu_id = data.createMenu.id;
-      //   var foodIdPromise = this.searchFood("Banana", diningId);
-      //   foodIdPromise.then(({data}) => {
-      //     if (data.foodByNameAndDining == null) {
-      //       var createFoodPromise = this.createFood("Banana", "fjeisojfoieas", "fjeisoajofiaejs", "efjsaiojaes", diningId);
-      //       createFoodPromise.then(({data})=> {
-      //         var addFoodToMenuPromise = this.addFoodToMenu(menu_id, data.createFood.id);
-      //         addFoodToMenuPromise.then(({data}) => {
-      //           console.log(data);
-      //         });
-      //       });
-      //     }
-      //   });
-      // })
-    // });
+  }
+
+  createDining = (name, hours, isHall) => {
+    return this.props.createDining({
+      variables: {
+        name: name,
+        hours: hours,
+        isHall: isHall
+      }
+    });
   }
 
   getDiningHallId = diningHallName => {
@@ -203,8 +198,9 @@ class App extends Component {
   }
 
   render() {
-    {/*this.testFunction()*/}
-    {/*this.scrapeMenu()*/}
+    {/*this.createAllDiningHalls()*/}
+    {this.scrapeMenu()}
+    {console.log("Finished parsing the menu.");}
     return (
       <div className="App">
         <header className="App-header">
@@ -226,6 +222,7 @@ class App extends Component {
 }
 
 export default compose(
+  graphql(CreateDining, { name: 'createDining' }),
   graphql(CreateMenu, { name: 'createMenu' }),
   graphql(CreateFood, { name: 'createFood' }),
   graphql(AddFoodToMenu, { name: 'addFoodToMenu' })
