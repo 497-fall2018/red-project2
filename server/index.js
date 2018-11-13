@@ -3,7 +3,7 @@ const { GraphQLServer } = require('graphql-yoga');
 // graphql-playground is also set up
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/NUdining', { useNewUrlParser: true });
+mongoose.connect('mongodb://localhost:27017/NUdining', { useNewUrlParser: true });
 mongoose.set('useFindAndModify', false);
 
 const Dining = require('./models/dining')
@@ -15,6 +15,10 @@ function compareRatings(food1, food2) {
     return (food2.thumbsUp - food2.thumbsDown) - (food1.thumbsUp - food1.thumbsDown);
     // if food1 is better, result is < 0, and food1 will have a lower index
     // sorts the array of foods in descending order
+}
+function sortFoods(foodArray, num) {
+    let sortedFoods = foodArray.sort(compareRatings);
+    return sortedFoods.slice(0, num);
 }
 
 
@@ -65,6 +69,7 @@ typeDefs = `
 
         menus: [Menu!]!
         menu(id: ID!): Menu
+        menuByDiningDateTimeOfDay(diningId: ID!, date: String!, timeOfDay: String): Menu
 
         foods: [Food!]!
         food(id: ID!): Food
@@ -122,11 +127,10 @@ resolvers = {
         )),
 
         topFoods: async (parent, { num }) => {
-            const allFoods = await Promise.all(parent.foodIds.map(
+            const foods = await Promise.all(parent.foodIds.map(
                 (id) => Food.findById(id)
             ));
-            const sortedFoods = allFoods.sort(compareRatings);
-            return sortedFoods.slice(0, num);
+            return sortFoods(foods, num);
         }
     },
     Food: {
@@ -149,6 +153,11 @@ resolvers = {
         //MENU
         menus: async () => await Menu.find(),
         menu: async (_, { id }) => await Menu.findById(id),
+        menuByDiningDateTimeOfDay: async(_, { diningId, date, timeOfDay }) => await Menu.findOne({ 
+            diningId: diningId,
+            date: date,
+            timeOfDay: timeOfDay
+        }),
 
 
         //FOOD
@@ -157,15 +166,21 @@ resolvers = {
 
         foodByNameAndDining: async (_, { name, diningId }) => await Food.findOne({ name: name, diningId: diningId }),
         topFoods: async (_, { num, isHall, date, timeOfDay}) => {
-            let diningIds = await Dining.find({ isHall: isHall }, {diningId: 1});
-            console.log(dinings)
-            /*
-            let menus = await Menu.find({
+            let dining_Ids = await Dining.find({ isHall: isHall }).select({ "_id": 1 });
+            let diningIds = dining_Ids.map(_ => _.id);
+
+            let menu_foodIds = await Menu.find({
                 diningId: { $in: diningIds },
                 date: date,
                 timeOfDay: timeOfDay
-            });
-            */
+            }).select({ foodIds: 1 });
+            let foodIds = (menu_foodIds.map(_ => _.foodIds));
+            foodIds = foodIds.reduce((acc, val) => acc.concat(val), []);
+
+            let foods = await Promise.all(foodIds.map(
+                (id) => Food.findById(id)
+            ));
+            return sortFoods(foods, num);
         },
 
         //USER

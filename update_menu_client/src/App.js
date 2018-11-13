@@ -191,6 +191,7 @@ class App extends Component {
     {/*this.createAllDiningHalls()*/}
     {/*this.scrapeMenu()*/}
     {console.log("Finished parsing the menu.");}
+
     return (
       <div className="App">
         <header className="App-header">
