@@ -7,7 +7,19 @@ import PageContainer from './components/pageContainer.js';
 import {sort} from './components/utils/sort'
 import moment from 'moment'
 
-// QUERY
+var request = require('request');
+
+const ThumbsUp = gql`
+  mutation thumbsUp($id: ID!) {
+    thumbsUp(id: $id)
+  }
+`
+
+const ThumbsDown = gql`
+  mutation thumbsDown($id: ID!) {
+    thumbsDown(id: $id)
+  }
+`
 
 class App extends Component {
   state = {
@@ -37,6 +49,19 @@ class App extends Component {
     ],
   }
 
+
+
+
+  handleIncrement= (food)=>{
+    this.props.thumbsUp(food.id)
+  };
+
+  handleDecrement= (food)=>{
+    this.props.thumbsDown(food.id)
+  }
+
+
+/*
   handleIncrement=(food)=>{
     let foodCopy = JSON.parse(JSON.stringify(this.state.diningFoods));
     for (var i = 0; i < foodCopy.length; i++) {
@@ -47,6 +72,8 @@ class App extends Component {
     this.setState({diningFoods:foodCopy});
   };
 
+
+
   handleDecrement=(food)=>{
     let foodCopy = JSON.parse(JSON.stringify(this.state.diningFoods));
     for (var i = 0; i < foodCopy.length; i++) {
@@ -56,6 +83,31 @@ class App extends Component {
     }
     this.setState({diningFoods:foodCopy});
   };
+*/
+
+thumbsUp = (id) => {
+  this.props.thumbsUp({
+    variables: {
+      id: id
+    },
+  }).then(({ data }) => {
+    console.log(data);
+  }).catch((error) => {
+    console.log(error);
+  });
+}
+
+thumbsDown = (id) => {
+  this.props.thumbsDown({
+    variables: {
+      id: id
+    },
+  }).then(({ data }) => {
+    console.log(data);
+  }).catch((error) => {
+    console.log(error);
+  });
+}
 
 
   render() {
