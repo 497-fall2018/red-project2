@@ -3,7 +3,7 @@ const { GraphQLServer } = require('graphql-yoga');
 // graphql-playground is also set up
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/NUdining', { useNewUrlParser: true });
+mongoose.connect('mongodb://localhost/NUdining', { useNewUrlParser: true });
 mongoose.set('useFindAndModify', false);
 
 const Dining = require('./models/dining')
