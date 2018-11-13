@@ -2,6 +2,7 @@ const { GraphQLServer } = require('graphql-yoga');
 // graphql-yoga uses express under the hood
 // graphql-playground is also set up
 const mongoose = require('mongoose');
+
 mongoose.connect('mongodb://localhost/NUdining', { useNewUrlParser: true });
 mongoose.set('useFindAndModify', false);
 
@@ -9,6 +10,13 @@ const Dining = require('./models/dining')
 const Menu = require('./models/menu')
 const Food = require('./models/food')
 const User = require('./models/user')
+
+function compareRatings(food1, food2) {
+    return (food2.thumbsUp - food2.thumbsDown) - (food1.thumbsUp - food1.thumbsDown);
+    // if food1 is better, result is < 0, and food1 will have a lower index
+    // sorts the array of foods in descending order
+}
+
 
 // typeDefs is the schema (what requests you can make to the server)
 // resolvers implement how our requests will be handled
@@ -28,6 +36,7 @@ typeDefs = `
         timeOfDay: String!
         dining: Dining!
         foods: [Food!]!
+        topFoods(num: Int!): [Food!]!
     }
     type Food {
         id: ID
@@ -51,7 +60,7 @@ typeDefs = `
         diningHalls: [Dining!]!
         nonDiningHalls: [Dining!]!
         findDining(id: ID!): Dining
-        dining: Dining!
+        dining(id: ID!): Dining!
         diningByName(name: String!): Dining
 
         menus: [Menu!]!
@@ -60,6 +69,7 @@ typeDefs = `
         foods: [Food!]!
         food(id: ID!): Food
         foodByNameAndDining(name: String!, diningId: ID!): Food
+        topFoods(num: Int!, isHall: Boolean!, date: String!, timeOfDay: String!): [Food!]!
 
         users: [User!]!
         user(id: ID!): User
@@ -72,72 +82,102 @@ typeDefs = `
         removeDining(id: ID!): Boolean!
 
         createMenu(diningId: ID!, timeOfDay: String!, date: String!): Menu!
-        addFoodToMenu(id: ID!, foodId: ID!): Boolean!
-        updateMenu(id: ID!, foodIds: [ID!], date: String): Boolean!
+        addFoodToMenu(menuId: ID!, foodId: ID!): Boolean!
+        removeFoodFromMenu(menuId: ID!, foodID: ID!): Boolean!
         removeMenu(id: ID!): Boolean!
 
         createFood(name: String!, description: String, diet: String, category: String, diningId: ID!): Food
         updateFood(id: ID!, thumbsUp: Int, thumbsDown: Int): Boolean!
-        removeFood(id: ID!): Boolean!
         thumbsUp(id: ID!): Boolean!
         thumbsDown(id: ID!): Boolean!
+        removeFood(id: ID!): Boolean!
 
         createUser(name: String!, diet: String, preferences: [String!]): User!
         updateUser(id: ID!, name: String, diet: String, preferences: [String!]): Boolean!
-        addFaveFoods(id: ID!, faveFoodIds: [ID!]!): Boolean!
+        addFaveFood(userId: ID!, foodId: ID!): Boolean!
+        removeFaveFood(userId: ID!, foodId: ID!): Boolean!
         removeUser(id: ID!): Boolean!
     }
 `
 // mongo generates an id by default, ID is a special type in graphql
 // passing the id in an update function is how graphQL knows which item to update
 
+
 resolvers = {
     Dining: {
-        menus: (parent) => parent.menuIds.map(
-            (id) => Menu.findById(id)),
-        foods: (parent) => parent.foodIds.map(
-            (id) => Food.findById(id))
+        menus: async (parent) => await Promise.all(
+            parent.menuIds.map(
+                (id) => Menu.findById(id)
+        )),
+        foods: async (parent) => await Promise.all(
+            parent.foodIds.map(
+                (id) => Food.findById(id)
+        ))
     },
     Menu: {
-        dining: (parent) => Dining.findById(parent.diningId),
-        foods: (parent) => parent.foodIds.map(
-            (id) => Food.findById(id))
+        dining: async (parent) => await Dining.findById(parent.diningId),
+        foods: async (parent) => await Promise.all(
+            parent.foodIds.map(
+                (id) => Food.findById(id)
+        )),
+
+        topFoods: async (parent, { num }) => {
+            const allFoods = await Promise.all(parent.foodIds.map(
+                (id) => Food.findById(id)
+            ));
+            const sortedFoods = allFoods.sort(compareRatings);
+            return sortedFoods.slice(0, num);
+        }
     },
     Food: {
-        dining: (parent) => Dining.findById(parent.diningId)
+        dining: async (parent) => await Dining.findById(parent.diningId)
     },
     User: {
-        faveFoods: (parent) => parent.faveFoodIds.map(
-            (id) => Food.findById(id)),
+        faveFoods: async (parent) => await Promise.all(
+            parent.faveFoodIds.map(
+                (id) => Food.findById(id)))
     },
     Query: {
         //DINING
-        dinings: () => Dining.find({}),
-        diningHalls: () => Dining.find({isHall: true}),
-        nonDiningHalls: () => Dining.find({isHall: false}),
-        findDining: (_, {id}) => Dining.findById(id),
-        dining: (parent) => Dining.findById(parent.diningId),
-        diningByName: (_, {name}) => Dining.findOne({name: name}),
+        dinings: async () => await Dining.find(),
+        dining: async (_, { id }) => await Dining.findById(id),
+
+        diningByName: async (_, { name }) => await Dining.findOne({name: name}),
+        diningHalls: async () => await Dining.find({ isHall: true }),
+        nonDiningHalls: async () => await Dining.find({ isHall: false }),
 
         //MENU
-        menus: () => Menu.find({}),
-        menu: (_, {id}) => Menu.findById(id),
+        menus: async () => await Menu.find(),
+        menu: async (_, { id }) => await Menu.findById(id),
 
 
         //FOOD
-        foods: () => Food.find({}),
-        food: (_, {id}) => Food.findById(id),
-        foodByNameAndDining: (_, {name, diningId}) => Food.findOne({name: name, diningId: diningId}),
+        foods: async () => await Food.find(),
+        food: async (_, { id }) => await Food.findById(id),
+
+        foodByNameAndDining: async (_, { name, diningId }) => await Food.findOne({ name: name, diningId: diningId }),
+        topFoods: async (_, { num, isHall, date, timeOfDay}) => {
+            let diningIds = await Dining.find({ isHall: isHall }, {diningId: 1});
+            console.log(dinings)
+            /*
+            let menus = await Menu.find({
+                diningId: { $in: diningIds },
+                date: date,
+                timeOfDay: timeOfDay
+            });
+            */
+        },
 
         //USER
-        users: () => User.find({}),
-        user: (_, {id}) => User.findById(id),
-        userByName: (_, {name}) => User.find({name})
+        users: async () => await User.find(),
+        user: async (_, { id }) => await User.findById(id),
+
+        userByName: async (_, { name }) => await User.findOne({ name: name })
     },
 
     Mutation: {
         //DINING
-        createDining: async (_, {name, hours, isHall}) => {
+        createDining: async (_, { name, hours, isHall }) => {
             const dining = new Dining({
                 name: name,
                 rating: 0,
@@ -149,7 +189,7 @@ resolvers = {
             await dining.save();
             return dining;
         },
-        updateDining: async (_, {id, rating, hours}) => {
+        updateDining: async (_, { id, rating, hours }) => {
             await Dining.findByIdAndUpdate(id, {
                 rating: rating,
                 hours: hours
@@ -157,13 +197,20 @@ resolvers = {
             return true;
 
         },
-        removeDining: async (_, {id}) => {
+        removeDining: async (_, { id }) => {
+            const dining = await Dining.findById(id);
+            await Promise.all(dining.foodIds.map(
+                (id) => Food.findByIdAndRemove(id)
+            ));
+            await Promise.all(dining.menuIds.map(
+                (id) => Menu.findByIdAndRemove(id)
+            ));
             await Dining.findByIdAndRemove(id);
             return true;
         },
 
         //MENU
-        createMenu: async (_, {diningId, timeOfDay, date}) => {
+        createMenu: async (_, { diningId, timeOfDay, date }) => {
             let menu = new Menu({
                 date: date,
                 timeOfDay: timeOfDay,
@@ -171,25 +218,23 @@ resolvers = {
             });
             await menu.save();
             await Dining.findByIdAndUpdate(diningId, {
-                $push: {menuIds: menu._id}
+                $push: { menuIds: menu._id }
             });
             return menu;
         },
-        updateMenu: async (_, {id, foodIds, date}) => {
-            await Menu.findByIdAndUpdate(id, {
-                foodIds: foodIds,
-                date: date
+        addFoodToMenu: async (_, { menuId, foodId }) => {
+            await Menu.findByIdAndUpdate(menuId, {
+                $push: { foodIds: foodId }
             });
             return true;
         },
-        addFoodToMenu: async (_, {id, foodId}) => {
+        removeFoodFromMenu: async (_, { menuId, foodId }) => {
             await Menu.findByIdAndUpdate(id, {
-                $push: {foodIds: foodId}
+                $pull: { foodIds: foodId }
             });
-            return true;
         },
-        removeMenu: async (_, {id}) => {
-            let menu = Menu.findById(id);
+        removeMenu: async (_, { id }) => {
+            const menu = await Menu.findById(id);
             await Dining.findByIdAndUpdate(menu.diningId, {
                 $pull: {menuIds: id}
             });
@@ -198,57 +243,65 @@ resolvers = {
         },
 
         //FOOD
-
-        createFood: async (_, {name, description, diet, category, diningId}) => {
-          let foundFood = Food.find({name: name, diningId: diningId}, async function(err, docs) {
-            if (docs.length) {
-              let food = docs;
-            } else {
-              let food = new Food({
-                  name: name,
-                  description: description,
-                  thumbsUp: 0,
-                  thumbsDown: 0,
-                  diet: diet,
-                  category: category,
-                  preferences: [], // use food name and description to match with preferences
-                  diningId: diningId
-              });
-              await food.save();
-              await Dining.findByIdAndUpdate(diningId, {
-                  $push: {foodIds: food._id}
-              });
+        createFood: async (_, { name, description, diet, category, diningId }) => {
+            let foundFood = await Food.findOne({ name: name, diningId: diningId });
+            if (foundFood == null) {
+                let food = new Food({
+                    name: name,
+                    description: description,
+                    thumbsUp: 0,
+                    thumbsDown: 0,
+                    diet: diet,
+                    category: category,
+                    preferences: [], // use food name and description to match with preferences
+                    diningId: diningId
+                });
+                await food.save();
+                await Dining.findByIdAndUpdate(diningId, {
+                    $push: { foodIds: food._id }
+                });
+                return food;
             }
-            return food;
-          });
+            else {
+                return foundFood;
+            }
         },
-        updateFood: async (_, {id, thumbsUp, thumbsDown}) => {
+        updateFood: async (_, { id, thumbsUp, thumbsDown }) => {
             await Food.findByIdAndUpdate(id, {
                 thumbsUp: thumbsUp,
                 thumbsDown: thumbsDown
             });
             return true;
         },
-        removeFood: async (_, {id}) => {
-            let food = Food.findById(id);
-            await Dining.findByIdAndUpdate(food.diningId, {
-                $pull: {foodIds: id}
-            });
-            await User.update({})
-            await Food.findByIdAndRemove(id);
-            return true;
-        },
         thumbsUp: async (_, {id}) => {
-            await Food.findByIdAndUpdate(id, { $inc: {thumbsUp: 1}});
+            await Food.findByIdAndUpdate(id, {
+                $inc: { thumbsUp: 1 }
+            });
             return true;
         },
         thumbsDown: async (_, {id}) => {
-            await Food.findByIdAndUpdate(id, { $inc: {thumbsDown: 1}});
+            await Food.findByIdAndUpdate(id, {
+                $inc: { thumbsDown: 1 }
+            });
+            return true;
+        },
+        removeFood: async (_, {id}) => {
+            let food = await Food.findById(id);
+            await Dining.findByIdAndUpdate(food.diningId, {
+                $pull: { foodIds: id }
+            });
+            await Menu.updateMany({
+                $pull: { foodIds: id }
+            });
+            await User.updateMany({
+                $pull: { faveFoodIds: id }
+            })
+            await Food.findByIdAndRemove(id);
             return true;
         },
 
         //USER
-        createUser: async (_, {name, diet, preferences = []}) => {
+        createUser: async (_, { name, diet, preferences = [] }) => {
             const user = new User({
                 name: name,
                 diet: diet,
@@ -258,7 +311,7 @@ resolvers = {
             await user.save();
             return user;
         },
-        updateUser: async (_, {id, name, diet, preferences}) => {
+        updateUser: async (_, { id, name, diet, preferences }) => {
             await User.findByIdAndUpdate(id, {
                 name: name,
                 diet: diet,
@@ -266,9 +319,15 @@ resolvers = {
             });
             return true;
         },
-        addFaveFoods: async (_, {id, faveFoodIds}) => {
-            await User.findByIdAndUpdate(id, {
-                $push: {faveFoodIds: {$each: faveFoodIds}}
+        addFaveFood: async (_, { userId, foodId }) => {
+            await User.findByIdAndUpdate(userId, {
+                $push: { faveFoodIds: foodId }
+            });
+            return true;
+        },
+        removeFaveFood: async (_, { userId, foodId }) => {
+            await User.findByIdAndUpdate(userId, {
+                $pull: { faveFoodIds: foodId }
             });
             return true;
         },
@@ -283,40 +342,3 @@ const server = new GraphQLServer({ typeDefs, resolvers });
 mongoose.connection.once('open', function() {
     server.start(() => console.log('Server is running on localhost:4000'));
 });
-
-/*
-// for a day
-    // for a dining hall
-        // for every menu ***
-            // we have all the foods for that menu
-            // for each food
-                // look in the database to see if a food with that name is already there
-                // if it is, put the foodId into foodIds for this new menu
-
-
-//for every menu
-`mutation {
-    createMenu(date: "November 8", timeOfDay: "Lunch", diningName: "Sargent")
-}
-`
-
-//for each food in the menu
-`query {
-    foodByNameAndDining(name: "chipotle chicken", diningId:) // returns the food
-}
-`
-// if true, add foodId to foodIds array for the menu
-// if false
-`mutation {
-    createFood(name: "chipotle chicken", decription: "blah", diet: "blah")
-}`
-// foodId to foodIds array for the menu
-
-
-
-
-// top 5 for the day overall - dining only
-// top 5 for particular meal - dining only
-// top 5 for a dining hall
-// make 5 a parameter
-*/

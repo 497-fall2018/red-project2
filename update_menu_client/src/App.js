@@ -145,6 +145,20 @@ class App extends Component {
       }
     }
   }
+  test_function = () => {
+    var dining_id = getDiningHallId("Sargent");
+    var new_menu = createMenu(diningId, "Lunch", "November 10");
+    var foundFood = searchFood("Arroz con Pollo", diningId);
+    if (foundFood == null) {
+        foundFood = createFood("Arroz con Pollo", diningId));
+    }
+    addFoodToMenu(new_menu, foundFood)
+    var notFoundFood = searchFood("Pineapple", diningId);
+    if (notFoundFood == null) {
+      notFoundFood = createFood("Pineapple", diningId);
+    }
+    addFoodToMenu(new_menu, notFoundFood)
+  }
 
   testFunction = () => {
     var diningIdPromise = this.getDiningHallId("Allison");
