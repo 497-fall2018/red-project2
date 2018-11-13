@@ -78,28 +78,18 @@ class App extends Component {
 
     var todaydate = moment().format("YYYY-MM-D");
     for (var i = 0; i < diningHalls.length; i++) {
-      var name = diningHalls[i].name;
-      var url = diningHalls[i].url;
       var options = {
         url: diningHalls[i].url + todaydate,
         headers: headers
       };
-
-      request(options, (function(error, response, body) {
-        this.responseCallback(name, error, response, body, todaydate);
-      }).bind(this));
+      this.getMenu(diningHalls[i].name, options, todaydate);
     }
+  }
 
-    // var todaydate = moment().format("YYYY-MM-D");
-    // var options = {
-    //   url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date=' + todaydate,
-    //   headers: headers
-    // };
-    //
-    // var diningHallName = "Allison";
-    // request(options, (function(error, response, body) {
-    //   this.responseCallback(diningHallName, error, response, body, todaydate);
-    // }).bind(this));
+  getMenu = (name, options, todaydate) => {
+    request(options, (function(error, response, body) {
+      this.responseCallback(name, error, response, body, todaydate);
+    }).bind(this));
   }
 
   responseCallback = async (diningHallName, error, response, body, date) => {
@@ -199,7 +189,7 @@ class App extends Component {
 
   render() {
     {/*this.createAllDiningHalls()*/}
-    {this.scrapeMenu()}
+    {/*this.scrapeMenu()*/}
     {console.log("Finished parsing the menu.");}
     return (
       <div className="App">
