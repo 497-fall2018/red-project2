@@ -198,6 +198,7 @@ resolvers = {
         },
 
         //FOOD
+
         createFood: async (_, {name, description, diet, category, diningId}) => {
           let foundFood = Food.find({name: name, diningId: diningId}, async function(err, docs) {
             if (docs.length) {
