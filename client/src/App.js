@@ -42,8 +42,29 @@ class App extends Component {
     ],
   }
 
-  handleThumbsUp = (foodId) => {
-    this.props.thumbsUp({
+  // handleThumbsUp = (foodId) => {
+  //   this.props.thumbsUp({
+  //     variables: {
+  //       id: foodId
+  //     },
+  //     refetchQueries: [{
+  //       query: TopFoodsOverall,
+  //       variables: {
+  //         num: 5,
+  //         isHall: true,
+  //         date: "2018-11-13",
+  //         timeOfDay: "Breakfast"
+  //       }
+  //     }]
+  //   }).then(() => {
+  //     this.loadTopFoods();
+  //   }).catch((error) => {
+  //     console.log(error);
+  //   });
+  // }
+
+  handleThumbsUp = async (foodId) => {
+    await Promise.resolve(this.props.thumbsUp({
       variables: {
         id: foodId
       },
@@ -56,11 +77,15 @@ class App extends Component {
           timeOfDay: "Breakfast"
         }
       }]
-    }).then(() => {
-      this.loadTopFoods();
-    }).catch((error) => {
-      console.log(error);
-    });
+    }));
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    await sleep(50);
+    console.log('One seconds later');
+
+    this.loadTopFoods();
   }
 
   handleThumbsDown = (foodId) => {
