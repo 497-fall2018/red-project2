@@ -15,12 +15,12 @@ export class HomePage extends Component {
   }
 
 
-  onIncrement= (food)=>{
-    this.props.thumbsUp(food.id)
+  onIncrement= (foodId)=>{
+    this.props.thumbsUp(foodId)
   };
 
-  onDecrement= (food)=>{
-    this.props.thumbsUp(food.id)
+  onDecrement= (foodId)=>{
+    this.props.thumbsUp(foodId)
   }
 
   /*
@@ -47,13 +47,13 @@ export class HomePage extends Component {
               <Menu.Item name='non-dining' active={activeTop5 === 'non-dining'} onClick={this.handleTop5Toggle}></Menu.Item>
             </Menu>
             <Top5Table
-              foodItems={activeTop5 == 'dining'? this.props.diningFoods : this.props.nonDiningFoods}
+              foodItems={activeTop5 == 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
               onIncrement={this.onIncrement}
               onDecrement={this.onDecrement}
             />
             <Header as='h1'>Bottom 5</Header>
             <Bottom5Table
-              foodItems={activeTop5 == 'dining'? this.props.diningFoods : this.props.nonDiningFoods}
+              foodItems={activeTop5 == 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
               onIncrement={this.onIncrement}
               onDecrement={this.onDecrement}
             />

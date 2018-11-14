@@ -67,12 +67,12 @@ export class PageContainer extends Component {
       }
   }
 
-  onIncrement= (food)=>{
-    this.props.thumbsUp(food.id)
+  onIncrement= (foodId)=>{
+    this.props.thumbsUp(foodId)
   };
 
-  onDecrement= (food)=>{
-    this.props.thumbsDown(food.id)
+  onDecrement= (foodId)=>{
+    this.props.thumbsDown(foodId)
   }
 
 /*
@@ -84,12 +84,14 @@ export class PageContainer extends Component {
     this.props.onDecrement(food);
   }
 */
-  changeDiningPage = (value) => { console.log(value);
-    this.setState({ activePage: value}) }
+  changeDiningPage = (value) => {
+    console.log(value);
+    this.setState({ activePage: value})
+  }
 
 
-    handlePageToggle = (e, { name }) => this.setState({ activePage: name })
-    handleDiningPage = (e, { value }) => { this.setState({ activePage: value}) }
+  handlePageToggle = (e, { name }) => this.setState({ activePage: name })
+  handleDiningPage = (e, { value }) => { this.setState({ activePage: value}) }
 
   render() {
     if (this.state.activePage == 'home') {
@@ -110,7 +112,9 @@ export class PageContainer extends Component {
                 </Dropdown.Menu>
               </Dropdown>
             </Menu.Item>
-            <Menu.Item><Dropdown text='non-dining' options={nonDiningOptions} onChange={this.handleDiningPage} /></Menu.Item>
+            <Menu.Item>
+              <Dropdown text='non-dining' options={nonDiningOptions} onChange={this.handleDiningPage} />
+            </Menu.Item>
           </Menu>
         <HomePage
           diningFoods={this.props.diningFoods}
@@ -140,7 +144,9 @@ export class PageContainer extends Component {
                   </Dropdown.Menu>
                 </Dropdown>
               </Menu.Item>
-              <Menu.Item><Dropdown text='non-dining' options={nonDiningOptions} onChange={this.handleDiningPage} /></Menu.Item>
+              <Menu.Item>
+                <Dropdown text='non-dining' options={nonDiningOptions} onChange={this.handleDiningPage} />
+              </Menu.Item>
             </Menu>
         <DiningMenuPage
           diningHall={this.state.activePage}

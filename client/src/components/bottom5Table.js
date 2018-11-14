@@ -11,9 +11,11 @@ const Bottom5Table = (props) => {
               .map(f => {
                   return <FoodRow
                       food={f}
-                      key={f._id}
-                      thumbsUp={e => props.onIncrement(f)}
-                      thumbsDown={e => props.onDecrement(f)}
+                      key={f.id}
+                      rank="some rank"
+                      //rank = { position in array }
+                      thumbsUp={e => props.onIncrement(f.id)}
+                      thumbsDown={e => props.onDecrement(f.id)}
                       />
               })
           }
