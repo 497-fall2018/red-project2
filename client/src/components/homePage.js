@@ -1,41 +1,20 @@
-import React, {Component} from 'react';
-import {Button, Icon, Label, Menu, Table, Dropdown, Header} from 'semantic-ui-react'
+import React, { Component } from 'react';
+import { Menu, Header } from 'semantic-ui-react'
 import Top5Table from './top5Table';
 import Bottom5Table from './bottom5Table';
 
-
-
 export class HomePage extends Component {
   constructor(props) {
-      super(props)
+      super(props) // only need when doing more stuff in child constructor
       this.state = {
-        activePage: 'home',
         activeTop5: 'dining'
       }
   }
 
-
-  onIncrement= (foodId)=>{
-    this.props.thumbsUp(foodId)
-  };
-
-  onDecrement= (foodId)=>{
-    this.props.thumbsUp(foodId)
-  }
-
-  /*
-  onIncrement = (food) => {
-    this.props.onIncrement(food);
-  }
-
-  onDecrement = (food) => {
-    this.props.onDecrement(food);
-  }
-  */
   handleTop5Toggle = (e, { name }) => this.setState({ activeTop5: name })
 
   render() {
-    const { activePage, activeTop5 } = this.state
+    const { activeTop5 } = this.state
     return (
       <div>
 
@@ -47,15 +26,15 @@ export class HomePage extends Component {
               <Menu.Item name='non-dining' active={activeTop5 === 'non-dining'} onClick={this.handleTop5Toggle}></Menu.Item>
             </Menu>
             <Top5Table
-              foodItems={activeTop5 == 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
-              onIncrement={this.onIncrement}
-              onDecrement={this.onDecrement}
+              foodItems={activeTop5 === 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
+              handleThumbsUp={this.props.handleThumbsUp}
+              handleThumbsDown={this.props.handleThumbsDown}
             />
             <Header as='h1'>Bottom 5</Header>
             <Bottom5Table
-              foodItems={activeTop5 == 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
-              onIncrement={this.onIncrement}
-              onDecrement={this.onDecrement}
+              foodItems={activeTop5 === 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
+              handleThumbsUp={this.props.handleThumbsUp}
+              handleThumbsDown={this.props.handleThumbsDown}
             />
           </div>
         </div>

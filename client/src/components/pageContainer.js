@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import {Button, Icon, Label, Menu, Table, Dropdown, Header} from 'semantic-ui-react'
+import React, { Component } from 'react';
+import { Menu, Dropdown } from 'semantic-ui-react'
 import HomePage from './homePage.js';
 import DiningMenuPage from './diningMenuPage.js';
 
@@ -67,28 +67,10 @@ export class PageContainer extends Component {
       }
   }
 
-  onIncrement= (foodId)=>{
-    this.props.thumbsUp(foodId)
-  };
-
-  onDecrement= (foodId)=>{
-    this.props.thumbsDown(foodId)
-  }
-
-/*
-  onIncrement = (food) => {
-    this.props.onIncrement(food);
-  }
-
-  onDecrement = (food) => {
-    this.props.onDecrement(food);
-  }
-*/
   changeDiningPage = (value) => {
     console.log(value);
     this.setState({ activePage: value})
   }
-
 
   handlePageToggle = (e, { name }) => this.setState({ activePage: name })
   handleDiningPage = (e, { value }) => { this.setState({ activePage: value}) }
@@ -119,13 +101,12 @@ export class PageContainer extends Component {
         <HomePage
           diningFoods={this.props.diningFoods}
           nonDiningFoods={this.props.nonDiningFoods}
-          onIncrement={this.onIncrement}
-          onDecrement={this.onDecrement}
+          handleThumbsUp={this.props.handleThumbsUp}
+          handleThumbsDown={this.props.handleThumbsDown}
         />
         </div>
       );
-    }
-    else {
+    } else {
       console.log (this.state.activePage);
       return (
         <div>

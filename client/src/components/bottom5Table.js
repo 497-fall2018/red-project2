@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import {Button, Icon, Label, Menu, Table, Card} from 'semantic-ui-react';
+import React, { Component } from 'react';
+import { Card } from 'semantic-ui-react';
 import FoodRow from './foodRow';
 
 const Bottom5Table = (props) => {
