@@ -95,9 +95,11 @@ export class PageContainer extends Component {
                 </Dropdown.Menu>
               </Dropdown>
             </Menu.Item>
+            {/*
             <Menu.Item>
               <Dropdown text='non-dining' options={nonDiningOptions} onChange={this.handleDiningPage} />
             </Menu.Item>
+            */}
           </Menu>
         <HomePage
           diningFoods={this.props.diningFoods}
@@ -125,9 +127,11 @@ export class PageContainer extends Component {
                   </Dropdown.Menu>
                 </Dropdown>
               </Menu.Item>
+              {/*
               <Menu.Item>
                 <Dropdown text='non-dining' options={nonDiningOptions} onChange={this.handleDiningPage} />
               </Menu.Item>
+              */}
             </Menu>
         <DiningMenuPage
           diningHall={this.state.activePage}

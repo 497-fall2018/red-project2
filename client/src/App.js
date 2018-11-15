@@ -85,6 +85,20 @@ const ThumbsDown = gql`
     thumbsDown(id: $id)
   }
 `
+function getCurrentTimeOfDay()
+{
+  var curTime = parseInt(moment().format("HH"));
+  if(curTime < 10)
+  {
+    return "Breakfast";
+  }
+    else if (curTime < 14) {
+    return "Lunch";
+  }
+  else if (curTime < 21) {
+    return "Dinner";
+  }
+}
 
 class App extends Component {
   state = {
@@ -105,7 +119,7 @@ class App extends Component {
           num: 5,
           isHall: true,
           date: moment().format("YYYY-MM-D"),
-          timeOfDay: "Breakfast"
+          timeOfDay: getCurrentTimeOfDay()
         }
       }]
     }));
@@ -128,7 +142,7 @@ class App extends Component {
           num: 5,
           isHall: true,
           date: moment().format("YYYY-MM-D"),
-          timeOfDay: "Breakfast"
+          timeOfDay: getCurrentTimeOfDay()
         }
       }]
     }));
@@ -231,10 +245,10 @@ class App extends Component {
   }
 
   loadTopFoods = () => {
-    this.topFoodsOverall(5, true, moment().format("YYYY-MM-D"), "Breakfast");
-    this.topFoodsOverall(5, false, moment().format("YYYY-MM-D"), "Breakfast");
-    this.getTopFoodsByDining(5, moment().format("YYYY-MM-D"), "Breakfast");
-    this.getAllFoodsByDining(moment().format("YYYY-MM-D"), "Breakfast")
+    this.topFoodsOverall(5, true, moment().format("YYYY-MM-D"), getCurrentTimeOfDay());
+    this.topFoodsOverall(5, false, moment().format("YYYY-MM-D"), getCurrentTimeOfDay());
+    this.getTopFoodsByDining(5, moment().format("YYYY-MM-D"), getCurrentTimeOfDay());
+    this.getAllFoodsByDining(moment().format("YYYY-MM-D"), getCurrentTimeOfDay())
   }
 
   // does one time when the component is first rendered

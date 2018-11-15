@@ -22,7 +22,7 @@ export class HomePage extends Component {
             <Header as='h1'>Top 5</Header>
             <Menu secondary>
               <Menu.Item name='dining' active={activeTop5 === 'dining'} onClick={this.handleTop5Toggle}></Menu.Item>
-              <Menu.Item name='non-dining' active={activeTop5 === 'non-dining'} onClick={this.handleTop5Toggle}></Menu.Item>
+              {/*<Menu.Item name='non-dining' active={activeTop5 === 'non-dining'} onClick={this.handleTop5Toggle}></Menu.Item>*/}
             </Menu>
             <Top5Table
               foodItems={activeTop5 === 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
