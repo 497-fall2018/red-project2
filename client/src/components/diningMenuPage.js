@@ -3,8 +3,7 @@ import { Header } from 'semantic-ui-react'
 import Top5Table from './top5Table';
 import gql from 'graphql-tag';
 import { graphql } from 'react-apollo';
-
-
+import MenuTable from './menuTable';
 
 export class DiningMenuPage extends Component {
   constructor(props) {
@@ -31,6 +30,11 @@ export class DiningMenuPage extends Component {
                   handleThumbsUp= {this.props.handleThumbsUp}
                   handleThumbsDown= {this.props.handleThumbsDown}
               />
+              <MenuTable
+                foodItems={this.props.diningHallFoods}
+                handleThumbsUp={this.props.handleThumbsUp}
+                handleThumbsDown={this.props.handleThumbsDown}
+                />
             </div>
           </div>
         </div>
