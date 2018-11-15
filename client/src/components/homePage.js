@@ -17,7 +17,6 @@ export class HomePage extends Component {
     const { activeTop5 } = this.state
     return (
       <div>
-
         <div style={{ display: 'flex', marginTop: '50px' }}>
           <div style={{ margin: "auto", width: 900 }}>
             <Header as='h1'>Top 5</Header>

@@ -3,6 +3,7 @@ import './App.css';
 import gql from 'graphql-tag';
 import { graphql, compose } from 'react-apollo';
 import PageContainer from './components/pageContainer.js';
+import moment from 'moment';
 
 const TopFoodsOverall= gql`
   query topFoods($num: Int!, $isHall: Boolean!, $date: String!, $timeOfDay: String!) {
@@ -81,7 +82,7 @@ class App extends Component {
         variables: {
           num: 5,
           isHall: true,
-          date: "2018-11-13",
+          date: moment().format("YYYY-MM-D"),
           timeOfDay: "Breakfast"
         }
       }]
@@ -89,7 +90,7 @@ class App extends Component {
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
-    
+
     await sleep(100);
     this.loadTopFoods();
   }
@@ -104,7 +105,7 @@ class App extends Component {
         variables: {
           num: 5,
           isHall: true,
-          date: "2018-11-13",
+          date: moment().format("YYYY-MM-D"),
           timeOfDay: "Breakfast"
         }
       }]
@@ -152,17 +153,17 @@ class App extends Component {
               timeOfDay // use moment to determine breakfast, lunch, or dinner
             }
           }).then(({ data }) => {
-            console.log(data.menuByDiningDateTimeOfDay)
+            // console.log(data.menuByDiningDateTimeOfDay)
             if (data.menuByDiningDateTimeOfDay != null) {
               this.setState({ diningHallTopFoods: [...this.state.diningHallTopFoods, data.menuByDiningDateTimeOfDay]})
-              console.log(this.state)
+              // console.log(this.state)
             }
         }).catch((error) => {
           console.log(error);
         });
       });
     }).catch((error) => {
-      console.log(error);  
+      console.log(error);
     });
   }
 
@@ -179,9 +180,9 @@ class App extends Component {
   }
 
   loadTopFoods = () => {
-    this.topFoodsOverall(5, true, "2018-11-13", "Breakfast");
-    this.topFoodsOverall(5, false, "2018-11-13", "Breakfast");
-    this.getTopFoodsByDining(5, "2018-11-13", "Breakfast");
+    this.topFoodsOverall(5, true, moment().format("YYYY-MM-D"), "Breakfast");
+    this.topFoodsOverall(5, false, moment().format("YYYY-MM-D"), "Breakfast");
+    this.getTopFoodsByDining(5, moment().format("YYYY-MM-D"), "Breakfast");
   }
 
   // does one time when the component is first rendered
@@ -189,7 +190,7 @@ class App extends Component {
     this.loadTopFoods();
   }
 
-  render() {  
+  render() {
     return (
       <PageContainer
         diningFoods={this.state.topDiningFoods}

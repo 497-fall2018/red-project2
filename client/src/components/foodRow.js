@@ -2,12 +2,12 @@ import React, {Component} from 'react';
 import {Button, Card, Icon} from 'semantic-ui-react'
 
 export class FoodRow extends Component {
-  
+
   render() {
     return (
       <Card>
         <Card.Content>
-          <Card.Header>#{this.props.rank} {this.props.food.name}</Card.Header>
+          <Card.Header>{this.props.food.name}</Card.Header>
           <Card.Meta>{this.props.food.dining.name}</Card.Meta>
           <Card.Description></Card.Description>
         </Card.Content>

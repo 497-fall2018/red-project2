@@ -5,8 +5,7 @@ import FoodRow from './foodRow';
 export class Top5Table extends Component {
 
     render() {
-        console.log('yyyy')
-        console.log(this.props.foodItems)
+        // console.log(this.props.foodItems)
         return (
             <Card.Group> {
                 this.props.foodItems
@@ -14,7 +13,6 @@ export class Top5Table extends Component {
                     return <FoodRow
                         key={f.id}
                         food={f}
-                        rank = {"some rank"} //rank = { position in array }
                         handleThumbsUp={this.props.handleThumbsUp}
                         handleThumbsDown={this.props.handleThumbsDown}
                         />
@@ -25,4 +23,3 @@ export class Top5Table extends Component {
 }
 
 export default Top5Table;
-
