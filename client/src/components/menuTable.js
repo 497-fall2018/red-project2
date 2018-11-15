@@ -8,17 +8,10 @@ import FoodRowTable from './foodRowTable';
 
 
 const MenuTable =(props)=>{
-        return(
+  if (props.foodItems != null) {
+      return(
         <React.Fragment>
         <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Food</TableCell>
-            <TableCell>Dining Hall</TableCell>
-            <TableCell>Price</TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableHead>
         <TableBody>
         {props.foodItems
               .map(f => {
@@ -33,9 +26,10 @@ const MenuTable =(props)=>{
         </TableBody>
       </Table>
       </React.Fragment>
-      
-      
-      
-        );
+      );
+  }
+  else {
+    return <p>No menu at this time.</p>
+  }
 }
 export default MenuTable

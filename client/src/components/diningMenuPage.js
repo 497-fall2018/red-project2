@@ -17,7 +17,7 @@ export class DiningMenuPage extends Component {
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
             <div style={{ margin: "auto", width: 900 }}>
               <Header as='h1'>{this.props.diningHall}</Header>
-              <Header as='h1'>Top 5</Header>
+              <Header as='h2'>Top 5</Header>
                 <Top5Table
                   foodItems= { this.props.diningHallTopFoods.filter(
                     (menu) => menu.dining.name == this.props.diningHall).map(
@@ -26,6 +26,9 @@ export class DiningMenuPage extends Component {
                   handleThumbsUp= {this.props.handleThumbsUp}
                   handleThumbsDown= {this.props.handleThumbsDown}
               />
+              <br></br>
+              <br></br>
+              <Header as='h2'>Current Menu</Header>
               <MenuTable
                 foodItems={ this.props.diningHallFoods.filter(
                   (menu) => menu.dining.name == this.props.diningHall).map(
