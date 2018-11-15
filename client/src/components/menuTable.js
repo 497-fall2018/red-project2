@@ -22,9 +22,9 @@ const MenuTable =(props)=>{
         <TableBody>
         {props.foodItems
               .map(f => {
-                return <FoodRowTable 
+                return <FoodRowTable
                     food={f}
-                    key={f._id}
+                    key={f.id}
                     handleThumbsUp={props.handleThumbsUp}
                     handleThumbsDown={props.handleThumbsDown}
                     />

@@ -76,6 +76,7 @@ export class PageContainer extends Component {
   handleDiningPage = (e, { value }) => { this.setState({ activePage: value}) }
 
   render() {
+
     if (this.state.activePage == 'home') {
       return (
         <div>
@@ -107,7 +108,6 @@ export class PageContainer extends Component {
         </div>
       );
     } else {
-      console.log (this.state.activePage);
       return (
         <div>
             <Menu secondary style={{display: 'flex', justifyContent: 'center'}}>
@@ -132,6 +132,7 @@ export class PageContainer extends Component {
         <DiningMenuPage
           diningHall={this.state.activePage}
           diningHallTopFoods={this.props.diningHallTopFoods}
+          diningHallFoods = {this.props.diningHallFoods}
           handleThumbsUp={this.props.handleThumbsUp}
           handleThumbsDown={this.props.handleThumbsDown}
         />

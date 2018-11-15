@@ -39,6 +39,27 @@ const TopFoodsMenu = gql`
     }
   }
 `
+const FoodsForMenus = gql`
+  query foodsForMenus($diningId: ID!, $date: String!, $timeOfDay: String!) {
+    menuByDiningDateTimeOfDay(diningId: $diningId, date: $date, timeOfDay: $timeOfDay) {
+      foods {
+        id
+        name
+        thumbsUp
+        thumbsDown
+        diet
+        dining {
+          name
+        }
+      }
+      dining {
+        id
+        name
+      }
+    }
+  }
+`
+
 const Dinings = gql`
   query {
     dinings {
@@ -70,6 +91,7 @@ class App extends Component {
     topDiningFoods: [],
     topNonDiningFoods: [],
     diningHallTopFoods : [],
+    diningHallFoods: []
   }
 
   handleThumbsUp = async (foodId) => {
@@ -167,6 +189,35 @@ class App extends Component {
     });
   }
 
+  getAllFoodsByDining = (date, timeOfDay) => {
+    this.props.client.query({
+      query: Dinings
+    }).then(({ data }) => {
+      this.setState({ diningHallTopFoods: [] });
+      data.dinings.map(
+        (food) => {
+          this.props.client.query({
+            query: FoodsForMenus,
+            variables: {
+              diningId: food.id,
+              date, // date: moment().format("YYYY-MM-D")
+              timeOfDay // use moment to determine breakfast, lunch, or dinner
+            }
+          }).then(({ data }) => {
+            if (data.menuByDiningDateTimeOfDay != null) {
+              this.setState({ diningHallFoods: [...this.state.diningHallFoods, data.menuByDiningDateTimeOfDay]})
+              // console.log("the current state is")
+              // console.log(this.state)
+            }
+        }).catch((error) => {
+          console.log(error);
+        });
+      });
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
   topFoodsMenu = (num, diningId, date, timeOfDay) => {
     this.props.client.query({
       query: TopFoodsMenu,
@@ -183,6 +234,7 @@ class App extends Component {
     this.topFoodsOverall(5, true, moment().format("YYYY-MM-D"), "Breakfast");
     this.topFoodsOverall(5, false, moment().format("YYYY-MM-D"), "Breakfast");
     this.getTopFoodsByDining(5, moment().format("YYYY-MM-D"), "Breakfast");
+    this.getAllFoodsByDining(moment().format("YYYY-MM-D"), "Breakfast")
   }
 
   // does one time when the component is first rendered
@@ -196,6 +248,7 @@ class App extends Component {
         diningFoods={this.state.topDiningFoods}
         nonDiningFoods={this.state.topNonDiningFoods}
         diningHallTopFoods={this.state.diningHallTopFoods}
+        diningHallFoods = { this.state.diningHallFoods }
         handleThumbsUp={this.handleThumbsUp}
         handleThumbsDown={this.handleThumbsDown}
       />

@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import { Header } from 'semantic-ui-react'
 import Top5Table from './top5Table';
-import gql from 'graphql-tag';
-import { graphql } from 'react-apollo';
 import MenuTable from './menuTable';
 
 export class DiningMenuPage extends Component {
@@ -14,8 +12,6 @@ export class DiningMenuPage extends Component {
   }
   render() {
     if (this.props.diningHallTopFoods.length != 0) {
-      // console.log(this.props.diningHallTopFoods)
-      console.log(this.props.diningHallTopFoods[0].topFoods)
       return (
         <div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
@@ -31,10 +27,14 @@ export class DiningMenuPage extends Component {
                   handleThumbsDown= {this.props.handleThumbsDown}
               />
               <MenuTable
-                foodItems={this.props.diningHallFoods}
+                foodItems={ this.props.diningHallFoods.filter(
+                  (menu) => menu.dining.name == this.props.diningHall).map(
+                    (menu) => menu.foods)[0]
+                  }
                 handleThumbsUp={this.props.handleThumbsUp}
                 handleThumbsDown={this.props.handleThumbsDown}
                 />
+
             </div>
           </div>
         </div>

@@ -29,12 +29,12 @@ export class HomePage extends Component {
               handleThumbsUp={this.props.handleThumbsUp}
               handleThumbsDown={this.props.handleThumbsDown}
             />
-            <Header as='h1'>Bottom 5</Header>
+            {/* <Header as='h1'>Bottom 5</Header>
             <Bottom5Table
               foodItems={activeTop5 === 'dining' ? this.props.diningFoods : this.props.nonDiningFoods}
               handleThumbsUp={this.props.handleThumbsUp}
               handleThumbsDown={this.props.handleThumbsDown}
-            />
+            /> */}
           </div>
         </div>
       </div>

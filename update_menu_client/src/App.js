@@ -54,7 +54,6 @@ const AddFoodToMenu = gql`
     addFoodToMenu(menuId: $menuId, foodId: $foodId)
   }
 `
-
 const diningHalls = [
   // TODO: substitute names later
   {name: "Allison", hours: "7:00am - 8:00pm", isHall: true, url: 'https://api.dineoncampus.com/v1/location/menu?site_id=5acea5d8f3eeb60b08c5a50d&platform=0&location_id=5b33ae291178e909d807593d&date='},

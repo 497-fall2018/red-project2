@@ -13,8 +13,8 @@ const FoodRowTable = (props) => {
         <TableCell>{props.food.diningHall}</TableCell>
         <TableCell>{props.food.price}</TableCell>
         <TableCell> <div className='ui two buttons'>
-        <Button onClick={() =>props.handleThumbsUp(props.food._id)} size='small' basic color='green'><Icon name='thumbs up' ></Icon>{props.food.thumbup}</Button>
-        <Button onClick={() =>props.handleThumbsDown(props.food._id)} size='small' basic color='red'><Icon name='thumbs down'></Icon>{props.food.thumbdown}</Button>
+        <Button onClick={() =>props.handleThumbsUp(props.food.id)} size='small' basic color='green'><Icon name='thumbs up' ></Icon>{props.food.thumbsUp}</Button>
+        <Button onClick={() =>props.handleThumbsDown(props.food.id)} size='small' basic color='red'><Icon name='thumbs down'></Icon>{props.food.thumbsDown}</Button>
         </div></TableCell>
       </TableRow>
 
