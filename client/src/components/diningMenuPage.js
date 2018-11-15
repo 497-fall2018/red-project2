@@ -24,7 +24,10 @@ export class DiningMenuPage extends Component {
               <Header as='h1'>{this.props.diningHall}</Header>
               <Header as='h1'>Top 5</Header>
                 <Top5Table
-                  foodItems= { this.props.diningHallTopFoods[0].topFoods }
+                  foodItems= { this.props.diningHallTopFoods.filter(
+                    (menu) => menu.dining.name == this.props.diningHall).map(
+                      (menu) => menu.topFoods)[0]
+                  }
                   handleThumbsUp= {this.props.handleThumbsUp}
                   handleThumbsDown= {this.props.handleThumbsDown}
               />
@@ -32,10 +35,9 @@ export class DiningMenuPage extends Component {
           </div>
         </div>
       );
-    } else {
-      return (
-        <div></div>
-      );
+    }
+    else {
+      return null
     }
   }
 }
