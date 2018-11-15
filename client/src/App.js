@@ -18,6 +18,41 @@ const TopFoodsOverall= gql`
     }
   }
 `
+const TopFoodsMenu = gql`
+  query topFoodsMenu($num: Int!, $diningId: ID!, $date: String!, $timeOfDay: String!) {
+    menuByDiningDateTimeOfDay(diningId: $diningId, date: $date, timeOfDay: $timeOfDay) {
+      topFoods(num: $num) {
+        id
+        name
+        thumbsUp
+        thumbsDown
+        diet
+        dining {
+          name
+        }
+      }
+      dining {
+        id
+        name
+      }
+    }
+  }
+`
+const Dinings = gql`
+  query {
+    dinings {
+      id
+      name
+      foods {
+        id
+        name
+        thumbsUp
+        thumbsDown
+        diet
+      }
+    }
+  }
+`
 const ThumbsUp = gql`
   mutation thumbsUp($id: ID!) {
     thumbsUp(id: $id)
@@ -33,35 +68,8 @@ class App extends Component {
   state = {
     topDiningFoods: [],
     topNonDiningFoods: [],
-    diningHallFoods : [
-      {_id: "1", name: "Apples ", rank: "1", diningHall: "Asiana Foodville", price: "3.00",thumbup:5,thumbdown:2},
-      {_id: "2", name: "Oranges", rank: "2", diningHall: "Budlong Hot Chicken", price: "3.00",thumbup:5,thumbdown:2},
-      {_id: "3", name: "Bananas", rank: "3", diningHall: "Lisa's", price: "3.00",thumbup:5,thumbdown:2},
-      {_id: "4", name: "Peaches", rank: "4", diningHall: "Lisa's", price: "3.00",thumbup:5,thumbdown:2},
-      {_id: "5", name: "Mangoes", rank: "5", diningHall: "Wildcat Deli", price: "3.00",thumbup:5,thumbdown:2}
-    ],
+    diningHallTopFoods : [],
   }
-
-  // handleThumbsUp = (foodId) => {
-  //   this.props.thumbsUp({
-  //     variables: {
-  //       id: foodId
-  //     },
-  //     refetchQueries: [{
-  //       query: TopFoodsOverall,
-  //       variables: {
-  //         num: 5,
-  //         isHall: true,
-  //         date: "2018-11-13",
-  //         timeOfDay: "Breakfast"
-  //       }
-  //     }]
-  //   }).then(() => {
-  //     this.loadTopFoods();
-  //   }).catch((error) => {
-  //     console.log(error);
-  //   });
-  // }
 
   handleThumbsUp = async (foodId) => {
     await Promise.resolve(this.props.thumbsUp({
@@ -82,23 +90,30 @@ class App extends Component {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
     
-    await sleep(50);
-    console.log('One seconds later');
-
+    await sleep(100);
     this.loadTopFoods();
   }
 
-  handleThumbsDown = (foodId) => {
-    console.log(foodId)
-    this.props.thumbsDown({
+  handleThumbsDown = async (foodId) => {
+    await Promise.resolve(this.props.thumbsDown({
       variables: {
         id: foodId
-      }
-    }).then(() => {
-      this.loadTopFoods();
-    }).catch((error) => {
-      console.log(error);
-    });
+      },
+      refetchQueries: [{
+        query: TopFoodsOverall,
+        variables: {
+          num: 5,
+          isHall: true,
+          date: "2018-11-13",
+          timeOfDay: "Breakfast"
+        }
+      }]
+    }));
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    await sleep(100);
+    this.loadTopFoods();
   }
 
   topFoodsOverall = (num, isHall, date, timeOfDay) => {
@@ -118,12 +133,55 @@ class App extends Component {
       }
     }).catch((error) => {
       console.log(error);
+    })
+  }
+
+  getTopFoodsByDining = (num, date, timeOfDay) => {
+    this.props.client.query({
+      query: Dinings
+    }).then(({ data }) => {
+      this.setState({ diningHallTopFoods: [] });
+      data.dinings.map(
+        (food) => {
+          this.props.client.query({
+            query: TopFoodsMenu,
+            variables: {
+              num, // same as num: num when named the same
+              diningId: food.id,
+              date, // date: moment().format("YYYY-MM-D")
+              timeOfDay // use moment to determine breakfast, lunch, or dinner
+            }
+          }).then(({ data }) => {
+            console.log(data.menuByDiningDateTimeOfDay)
+            if (data.menuByDiningDateTimeOfDay != null) {
+              this.setState({ diningHallTopFoods: [...this.state.diningHallTopFoods, data.menuByDiningDateTimeOfDay]})
+              console.log(this.state)
+            }
+        }).catch((error) => {
+          console.log(error);
+        });
+      });
+    }).catch((error) => {
+      console.log(error);  
     });
+  }
+
+  topFoodsMenu = (num, diningId, date, timeOfDay) => {
+    this.props.client.query({
+      query: TopFoodsMenu,
+      variables: {
+        num, // same as num: num when named the same
+        diningId,
+        date, // date: moment().format("YYYY-MM-D")
+        timeOfDay // use moment to determine breakfast, lunch, or dinner
+      }
+    })
   }
 
   loadTopFoods = () => {
     this.topFoodsOverall(5, true, "2018-11-13", "Breakfast");
     this.topFoodsOverall(5, false, "2018-11-13", "Breakfast");
+    this.getTopFoodsByDining(5, "2018-11-13", "Breakfast");
   }
 
   // does one time when the component is first rendered
@@ -136,7 +194,7 @@ class App extends Component {
       <PageContainer
         diningFoods={this.state.topDiningFoods}
         nonDiningFoods={this.state.topNonDiningFoods}
-        diningHallFoods={this.state.allDiningHallFoods}
+        diningHallTopFoods={this.state.diningHallTopFoods}
         handleThumbsUp={this.handleThumbsUp}
         handleThumbsDown={this.handleThumbsDown}
       />

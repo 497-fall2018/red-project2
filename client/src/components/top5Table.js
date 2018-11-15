@@ -5,10 +5,11 @@ import FoodRow from './foodRow';
 export class Top5Table extends Component {
 
     render() {
+        console.log('yyyy')
+        console.log(this.props.foodItems)
         return (
             <Card.Group> {
-                this.props
-                .foodItems
+                this.props.foodItems
                 .map(f => {
                     return <FoodRow
                         key={f.id}

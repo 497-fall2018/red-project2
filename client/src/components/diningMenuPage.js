@@ -1,6 +1,9 @@
-import React, {Component} from 'react';
-import {Button, Icon, Label, Menu, Table, Dropdown, Header} from 'semantic-ui-react'
+import React, { Component } from 'react';
+import { Header } from 'semantic-ui-react'
 import Top5Table from './top5Table';
+import gql from 'graphql-tag';
+import { graphql } from 'react-apollo';
+
 
 
 export class DiningMenuPage extends Component {
@@ -10,17 +13,19 @@ export class DiningMenuPage extends Component {
       activePage: this.props.diningHall
     }
   }
-
   render() {
-    const {activePage } = this.state
+    console.log('xxxxxxxx')
+    console.log( this.props.diningHallTopFoods[0].topFoods)
     return (
       <div>
-        <div style={{ display: 'flex', marginTop: '50px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
           <div style={{ margin: "auto", width: 900 }}>
             <Header as='h1'>{this.props.diningHall}</Header>
             <Header as='h1'>Top 5</Header>
               <Top5Table
-              foodItems= { this.props.diningHallFoods }
+                foodItems= { this.props.diningHallTopFoods[0].topFoods }
+                handleThumbsUp= {this.props.handleThumbsUp}
+                handleThumbsDown= {this.props.handleThumbsDown}
             />
           </div>
         </div>
