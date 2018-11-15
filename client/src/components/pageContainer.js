@@ -131,7 +131,9 @@ export class PageContainer extends Component {
             </Menu>
         <DiningMenuPage
           diningHall={this.state.activePage}
-          diningHallFoods={this.props.diningHallFoods}
+          diningHallTopFoods={this.props.diningHallTopFoods}
+          handleThumbsUp={this.props.handleThumbsUp}
+          handleThumbsDown={this.props.handleThumbsDown}
         />
       </div>
       );
